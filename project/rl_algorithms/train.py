@@ -39,15 +39,21 @@ def _tensorboard_available() -> bool:
 def resolve_config_path(config_arg: Optional[str]) -> str:
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(script_dir, ".."))
+    repo_root = os.path.abspath(os.path.join(project_root, ".."))
     candidates = []
     if config_arg:
-        if os.path.isabs(config_arg):
-            candidates.append(config_arg)
+        normalized_arg = os.path.normpath(config_arg)
+        if os.path.isabs(normalized_arg):
+            candidates.append(normalized_arg)
         else:
             # relative to current working directory
-            candidates.append(os.path.abspath(config_arg))
+            candidates.append(os.path.abspath(normalized_arg))
             # relative to script location
-            candidates.append(os.path.abspath(os.path.join(script_dir, config_arg)))
+            candidates.append(os.path.abspath(os.path.join(script_dir, normalized_arg)))
+            # relative to project root
+            candidates.append(os.path.abspath(os.path.join(project_root, normalized_arg)))
+            # relative to repository root (one level up from project)
+            candidates.append(os.path.abspath(os.path.join(repo_root, normalized_arg)))
     # fallback: default config in project root
     candidates.append(os.path.join(project_root, "configs", "default.yaml"))
     # fallback: default config relative to CWD
@@ -425,6 +431,12 @@ def main():
         help="Directory to save trained models",
     )
     parser.add_argument(
+        "--log-path",
+        type=str,
+        default="logs",
+        help="Directory to store training logs",
+    )
+    parser.add_argument(
         "--timesteps",
         type=int,
         default=None,
@@ -478,6 +490,7 @@ def main():
             algorithm=args.algo,
             total_timesteps=timesteps,
             save_path=args.save_path,
+            log_path=args.log_path,
             seed=args.seed,
         )
 
