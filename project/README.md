@@ -85,7 +85,7 @@ python rl_algorithms/train.py \
     --config configs/default.yaml \
     --algo PPO \
     --timesteps 200000 \
-    --save-path models
+    --save-path my_models
 
 # Train with SAC (continuous actions)
 # Use the continuous-action config for SAC
@@ -93,14 +93,14 @@ python rl_algorithms/train.py \
     --config configs/sac_continuous.yaml \
     --algo SAC \
     --timesteps 200000 \
-    --save-path models
+    --save-path my_models
 
 # Run from any directory (path resolution handled automatically)
 python D:/学习/化能任选/换热器设计/workspace/project/rl_algorithms/train.py \
     --config D:/学习/化能任选/换热器设计/workspace/project/configs/sac_continuous.yaml \
     --algo SAC \
     --timesteps 200000 \
-    --save-path D:/tmp/models
+    --save-path D:/tmp/my_models
 ```
 
 ### 3. Evaluate and compare
@@ -110,12 +110,12 @@ python D:/学习/化能任选/换热器设计/workspace/project/rl_algorithms/tr
 python rl_algorithms/train.py --eval \
     --config configs/sac_continuous.yaml \
     --algo SAC \
-    --model-path models/SAC_YYYYMMDD_HHMMSS_final.zip
+    --model-path my_models/SAC_YYYYMMDD_HHMMSS_final.zip
 
 # Unified comparison with baseline
 python simulate/run_eval.py --config configs/sac_continuous.yaml \
     --baseline simple_tou \
-    --rl-model models/SAC_YYYYMMDD_HHMMSS_final.zip \
+    --rl-model my_models/SAC_YYYYMMDD_HHMMSS_final.zip \
     --algo SAC \
     --episodes 10 \
     --output results

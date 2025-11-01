@@ -10,7 +10,7 @@ import sys
 sys.path.append('..')
 
 from models.thermal_storage import SensibleHeatStorage, PCMStorage
-from models.heat_exchanger import EffectivenessNTU, LMTD
+from models.heat_exchanger import EffectivenessNTU, LMTD, create_heat_exchanger
 from models.economic_model import TOUPricing, EconomicModel
 
 
@@ -106,6 +106,104 @@ class TestSensibleHeatStorage:
         assert result["temperature_violation"] >= 0.0
 
 
+def test_heat_losses_positive():
+    storage = SensibleHeatStorage(
+        mass=1000.0,
+        specific_heat=4.18,
+        initial_temperature=60.0,
+        min_temperature=40.0,
+        max_temperature=80.0,
+        loss_coefficient=15.0,
+        ambient_temperature=20.0,
+    )
+    assert storage.get_heat_losses() > 0.0
+
+
+def test_heat_losses_zero_when_cooler():
+    storage = SensibleHeatStorage(
+        mass=1000.0,
+        specific_heat=4.18,
+        initial_temperature=35.0,
+        min_temperature=20.0,
+        max_temperature=80.0,
+        loss_coefficient=15.0,
+        ambient_temperature=40.0,
+    )
+    assert storage.get_heat_losses() == 0.0
+
+
+def test_state_of_charge_clamped_high():
+    storage = SensibleHeatStorage(
+        mass=500.0,
+        specific_heat=4.18,
+        initial_temperature=45.0,
+        min_temperature=40.0,
+        max_temperature=50.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=500.0, power_out=0.0, timestep=3600)
+    assert 0.99 <= storage.get_state_of_charge() <= 1.0
+
+
+def test_state_of_charge_clamped_low():
+    storage = SensibleHeatStorage(
+        mass=500.0,
+        specific_heat=4.18,
+        initial_temperature=45.0,
+        min_temperature=40.0,
+        max_temperature=50.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=0.0, power_out=400.0, timestep=3600)
+    assert 0.0 <= storage.get_state_of_charge() <= 0.01
+
+
+def test_storage_reset_restores_temperature():
+    storage = SensibleHeatStorage(
+        mass=1000.0,
+        specific_heat=4.18,
+        initial_temperature=45.0,
+        min_temperature=40.0,
+        max_temperature=50.0,
+        loss_coefficient=10.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=200.0, power_out=0.0, timestep=1800)
+    storage.reset()
+    assert storage.temperature == pytest.approx(45.0)
+
+
+def test_is_temperature_valid_detects_violation():
+    storage = SensibleHeatStorage(
+        mass=1000.0,
+        specific_heat=4.18,
+        initial_temperature=45.0,
+        min_temperature=40.0,
+        max_temperature=50.0,
+        loss_coefficient=10.0,
+        ambient_temperature=20.0,
+    )
+    storage.temperature = 55.0
+    assert not storage.is_temperature_valid()
+
+
+def test_temperature_violation_on_cooling():
+    storage = SensibleHeatStorage(
+        mass=1000.0,
+        specific_heat=4.18,
+        initial_temperature=42.0,
+        min_temperature=40.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    result = storage.step(power_in=0.0, power_out=500.0, timestep=3600)
+    assert result["temperature_violation"] > 0.0
+    assert storage.temperature == storage.min_temperature
+
+
 class TestHeatExchanger:
     """Tests for heat exchanger models."""
     
@@ -158,6 +256,219 @@ class TestHeatExchanger:
         
         assert result["heat_transfer"] > 0
         assert result["lmtd"] > 0
+
+
+def test_pcm_initial_liquid_fraction_below_melting():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=20.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    assert storage.liquid_fraction == 0.0
+
+
+def test_pcm_initial_liquid_fraction_above_melting():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=35.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    assert storage.liquid_fraction == 1.0
+
+
+def test_pcm_charging_increases_liquid_fraction():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=25.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=80.0, power_out=0.0, timestep=3600)
+    assert storage.liquid_fraction == 1.0
+
+
+def test_pcm_discharging_decreases_liquid_fraction():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=35.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=0.0, power_out=60.0, timestep=3600)
+    assert storage.liquid_fraction == 0.0
+
+
+def test_pcm_temperature_constraint_enforced():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=35.0,
+        min_temperature=10.0,
+        max_temperature=50.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    result = storage.step(power_in=200.0, power_out=0.0, timestep=3600)
+    assert result["temperature_violation"] > 0.0
+    assert storage.temperature == storage.max_temperature
+
+
+def test_pcm_state_of_charge_at_phase_change():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=25.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.liquid_fraction = 0.3
+    soc = storage.get_state_of_charge()
+    assert soc == pytest.approx(0.292, rel=1e-2)
+
+
+def test_pcm_reset_restores_fraction():
+    storage = PCMStorage(
+        mass=500.0,
+        specific_heat_solid=2.1,
+        specific_heat_liquid=2.3,
+        latent_heat=150.0,
+        melting_point=25.0,
+        initial_temperature=35.0,
+        min_temperature=10.0,
+        max_temperature=60.0,
+        loss_coefficient=0.0,
+        ambient_temperature=20.0,
+    )
+    storage.step(power_in=0.0, power_out=70.0, timestep=3600)
+    storage.reset()
+    assert storage.temperature == pytest.approx(35.0)
+    assert storage.liquid_fraction == 1.0
+
+
+def test_effectiveness_ntu_zero_flow_returns_zero():
+    hx = EffectivenessNTU(heat_transfer_area=30.0, overall_heat_transfer_coefficient=0.5)
+    result = hx.calculate_heat_transfer(
+        mass_flow_hot=0.0,
+        mass_flow_cold=1.0,
+        temp_hot_in=60.0,
+        temp_cold_in=20.0,
+    )
+    assert result["heat_transfer"] == 0.0
+    assert result["effectiveness"] == 0.0
+
+
+def test_effectiveness_ntu_uses_fixed_effectiveness():
+    hx = EffectivenessNTU(
+        heat_transfer_area=30.0,
+        overall_heat_transfer_coefficient=0.5,
+        effectiveness=0.7,
+    )
+    result = hx.calculate_heat_transfer(
+        mass_flow_hot=1.2,
+        mass_flow_cold=0.8,
+        temp_hot_in=80.0,
+        temp_cold_in=30.0,
+    )
+    assert result["effectiveness"] == pytest.approx(0.7)
+
+
+def test_effectiveness_ntu_crossflow_effectiveness_range():
+    hx = EffectivenessNTU(
+        heat_transfer_area=40.0,
+        overall_heat_transfer_coefficient=0.8,
+        flow_arrangement="crossflow",
+    )
+    result = hx.calculate_heat_transfer(
+        mass_flow_hot=1.5,
+        mass_flow_cold=1.0,
+        temp_hot_in=90.0,
+        temp_cold_in=20.0,
+    )
+    assert 0.0 <= result["effectiveness"] <= 1.0
+
+
+def test_lmtd_zero_flow_returns_zero():
+    hx = LMTD(heat_transfer_area=50.0, overall_heat_transfer_coefficient=0.5)
+    result = hx.calculate_heat_transfer(
+        mass_flow_hot=1.0,
+        mass_flow_cold=0.0,
+        temp_hot_in=60.0,
+        temp_cold_in=20.0,
+    )
+    assert result["heat_transfer"] == 0.0
+    assert result["lmtd"] == 0.0
+
+
+def test_lmtd_parallel_flow_limits():
+    hx = LMTD(
+        heat_transfer_area=50.0,
+        overall_heat_transfer_coefficient=0.5,
+        flow_arrangement="parallel",
+    )
+    result = hx.calculate_heat_transfer(
+        mass_flow_hot=1.1,
+        mass_flow_cold=1.0,
+        temp_hot_in=70.0,
+        temp_cold_in=25.0,
+    )
+    assert result["temp_hot_out"] <= 70.0
+    assert result["temp_cold_out"] >= 25.0
+    assert result["temp_hot_out"] >= result["temp_cold_out"]
+
+
+def test_create_heat_exchanger_returns_effectiveness_instance():
+    config = {
+        "type": "effectiveness_ntu",
+        "heat_transfer_area": 30.0,
+        "overall_heat_transfer_coefficient": 0.6,
+        "flow_arrangement": "counterflow",
+    }
+    hx = create_heat_exchanger(config)
+    assert isinstance(hx, EffectivenessNTU)
+
+
+def test_create_heat_exchanger_invalid_type_raises():
+    config = {
+        "type": "invalid",
+        "heat_transfer_area": 30.0,
+        "overall_heat_transfer_coefficient": 0.6,
+    }
+    with pytest.raises(ValueError):
+        create_heat_exchanger(config)
 
 
 class TestTOUPricing:

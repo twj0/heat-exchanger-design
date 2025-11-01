@@ -346,12 +346,12 @@ python demo.py
 
 ### 3. 训练模型
 ```bash
-python rl_algorithms/train.py --algo SAC --timesteps 200000
+python rl_algorithms/train.py --algo SAC --timesteps 200000 --save-path my_models
 ```
 
 ### 4. 评估对比
 ```bash
-python simulate/run_eval.py --config configs/default.yaml --rl-model models/SAC_xxx/best_model.zip
+python simulate/run_eval.py --config configs/sac_continuous.yaml --rl-model my_models/SAC_xxx/best_model.zip
 ```
 
 ---

@@ -108,44 +108,50 @@ def demo_rl_training():
     print("\n" + "=" * 80)
     print("DEMO 3: RL Training (Short Demo)")
     print("=" * 80)
-    
+
+    algo_choice = input("\nSelect RL algorithm for demo [PPO/DQN] (default: PPO): ").strip().upper()
+    if algo_choice not in {"PPO", "DQN"}:
+        algo_choice = "PPO"
+
+    config_path = "configs/ppo_config.yaml" if algo_choice == "PPO" else "configs/dqn_config.yaml"
+
     # Load configuration
-    with open("configs/default.yaml", "r") as f:
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
-    
+
     # Shorten for quick demo
     config["simulation"]["duration"] = 168  # 1 week
     config["training"]["total_timesteps"] = 10000  # Reduced for demo
     config["training"]["eval_freq"] = 2000
     config["training"]["save_freq"] = 5000
-    
-    print("\nTraining PPO agent (10,000 steps, ~2 minutes)...")
+
+    print(f"\nTraining {algo_choice} agent (10,000 steps, ~2 minutes)...")
     print("Note: This is a short demo. Real training requires 200,000+ steps.\n")
-    
+
     model = train_rl_agent(
         config=config,
-        algorithm="PPO",
+        algorithm=algo_choice,
         total_timesteps=10000,
-        save_path="demo_models",
+        save_path="my_demo_models",
         log_path="demo_logs",
         seed=42,
     )
-    
+
     print("\n✓ RL training demo complete!")
-    print("  Model saved to: demo_models/")
-    
-    return config
+    print("  Model saved to: my_demo_models/")
+
+    return config, algo_choice
 
 
-def demo_comparison(baseline_data, config):
+def demo_comparison(baseline_data, config, algo):
     """Demonstrate comparison between controllers."""
     print("\n" + "=" * 80)
     print("DEMO 4: Controller Comparison")
     print("=" * 80)
     
     # Find the trained model
-    model_dir = Path("demo_models")
-    model_files = list(model_dir.glob("PPO_*/**/best_model.zip"))
+    model_dir = Path("my_demo_models")
+    model_files = list(model_dir.glob(f"{algo}_*/**/best_model.zip"))
     
     if not model_files:
         print("\n⚠ No trained model found. Skipping comparison.")
@@ -158,15 +164,19 @@ def demo_comparison(baseline_data, config):
     rl_results = evaluate_rl_agent(
         model_path=model_path,
         config=config,
+        algo=algo,
         n_episodes=1,
         seed=42,
         render=False,
     )
     
     # Get RL episode data
-    from stable_baselines3 import PPO
+    from stable_baselines3 import PPO, DQN
     env = TESHeatExEnv(config)
-    model = PPO.load(model_path)
+    if algo == "DQN":
+        model = DQN.load(model_path)
+    else:
+        model = PPO.load(model_path)
     
     obs, info = env.reset(seed=42)
     terminated = False
@@ -223,10 +233,10 @@ def main():
         baseline_data = demo_baseline_controller()
         
         # Demo 3: RL Training
-        config = demo_rl_training()
+        config, algo = demo_rl_training()
         
         # Demo 4: Comparison
-        demo_comparison(baseline_data, config)
+        demo_comparison(baseline_data, config, algo)
         
         print("\n" + "=" * 80)
         print("ALL DEMOS COMPLETE!")

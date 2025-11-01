@@ -115,7 +115,7 @@ training:
   # Saving
   save_freq: 50000
   log_dir: "logs"
-  model_dir: "models"
+  model_dir: "my_models"
 
 # Evaluation parameters
 evaluation:

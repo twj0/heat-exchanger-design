@@ -9,6 +9,7 @@ import yaml
 import argparse
 import numpy as np
 import torch
+from copy import deepcopy
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -20,6 +21,7 @@ from stable_baselines3.common.callbacks import (
 )
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.base_class import BaseAlgorithm
 
 import sys
 sys.path.append('..')
@@ -58,22 +60,35 @@ def resolve_config_path(config_arg: Optional[str]) -> str:
     )
 
 
-def create_env(config: Dict, seed: Optional[int] = None):
+def create_env(
+    config: Dict,
+    seed: Optional[int] = None,
+    vectorized: bool = False,
+):
     """
     Create and wrap environment.
     
     Args:
         config: Configuration dictionary
         seed: Random seed
+        vectorized: Whether to wrap in a DummyVecEnv
         
     Returns:
         Wrapped environment
     """
+    def _make_env() -> Monitor:
+        env_config = deepcopy(config)
+        if seed is not None:
+            env_config["simulation"]["seed"] = seed
+        env = TESHeatExEnv(env_config)
+        return Monitor(env)
+
+    if vectorized:
+        return DummyVecEnv([_make_env])
+
+    env = _make_env()
     if seed is not None:
-        config["simulation"]["seed"] = seed
-    
-    env = TESHeatExEnv(config)
-    env = Monitor(env)
+        env.reset(seed=seed)
     return env
 
 
@@ -81,10 +96,10 @@ def train_rl_agent(
     config: Dict,
     algorithm: str = "PPO",
     total_timesteps: int = 200000,
-    save_path: str = "models",
+    save_path: str = "my_models",
     log_path: str = "logs",
     seed: int = 42,
-) -> None:
+) -> BaseAlgorithm:
     """
     Train an RL agent.
     
@@ -96,10 +111,8 @@ def train_rl_agent(
         log_path: Directory for logs
         seed: Random seed
     """
-    # Create directories
-    os.makedirs(save_path, exist_ok=True)
-    os.makedirs(log_path, exist_ok=True)
-    
+    algorithm = algorithm.upper()
+
     # Create timestamp for this run
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_name = f"{algorithm}_{timestamp}"
@@ -109,22 +122,35 @@ def train_rl_agent(
     print(f"Total timesteps: {total_timesteps}")
     print(f"Seed: {seed}")
     
-    # Create environments
-    print("\nCreating environments...")
-    train_env = create_env(config, seed=seed)
-    eval_env = create_env(config, seed=seed + 1)
-    
-    # Determine tensorboard logging support
-    use_tb = _tensorboard_available()
-    tb_log_dir = log_path if use_tb else None
-    if not use_tb:
-        print("\nTensorBoard not found: disabling tensorboard logging for this run.")
-    
     # Get training parameters from config
     training_config = config.get("training", {})
     learning_rate = training_config.get("learning_rate", 3e-4)
     batch_size = training_config.get("batch_size", 64)
     gamma = training_config.get("gamma", 0.99)
+
+    # Allow config overrides for directories when defaults are used
+    config_model_dir = training_config.get("model_dir")
+    if config_model_dir and save_path in {"my_models", "models"}:
+        save_path = config_model_dir
+
+    config_log_dir = training_config.get("log_dir")
+    if config_log_dir and log_path == "logs":
+        log_path = config_log_dir
+
+    # Create directories
+    os.makedirs(save_path, exist_ok=True)
+    os.makedirs(log_path, exist_ok=True)
+
+    # Create environments
+    print("\nCreating environments...")
+    train_env = create_env(config, seed=seed, vectorized=True)
+    eval_env = create_env(config, seed=seed + 1, vectorized=True)
+
+    # Determine tensorboard logging support
+    use_tb = _tensorboard_available()
+    tb_log_dir = log_path if use_tb else None
+    if not use_tb:
+        print("\nTensorBoard not found: disabling tensorboard logging for this run.")
     
     # Create RL model
     print(f"\nCreating {algorithm} model...")
@@ -135,7 +161,11 @@ def train_rl_agent(
     if algorithm == "PPO":
         n_steps = training_config.get("n_steps", 2048)
         n_epochs = training_config.get("n_epochs", 10)
-        
+        gae_lambda = training_config.get("gae_lambda", 0.95)
+        clip_range = training_config.get("clip_range", 0.2)
+        ent_coef = training_config.get("ent_coef", 0.0)
+        vf_coef = training_config.get("vf_coef", 0.5)
+
         model = PPO(
             "MlpPolicy",
             train_env,
@@ -144,16 +174,21 @@ def train_rl_agent(
             batch_size=batch_size,
             n_epochs=n_epochs,
             gamma=gamma,
+            gae_lambda=gae_lambda,
+            clip_range=clip_range,
+            ent_coef=ent_coef,
+            vf_coef=vf_coef,
             verbose=1,
             tensorboard_log=tb_log_dir,
             device=device,
+            seed=seed,
         )
-        
+
     elif algorithm == "SAC":
         buffer_size = training_config.get("buffer_size", 100000)
         learning_starts = training_config.get("learning_starts", 1000)
         tau = training_config.get("tau", 0.005)
-        
+
         model = SAC(
             "MlpPolicy",
             train_env,
@@ -166,25 +201,47 @@ def train_rl_agent(
             verbose=1,
             tensorboard_log=tb_log_dir,
             device=device,
+            seed=seed,
         )
-        
+
     elif algorithm == "DQN":
         buffer_size = training_config.get("buffer_size", 100000)
         learning_starts = training_config.get("learning_starts", 1000)
-        
-        model = DQN(
-            "MlpPolicy",
-            train_env,
+        train_freq = training_config.get("train_freq", 4)
+        gradient_steps = training_config.get("gradient_steps", -1)
+        target_update_interval = training_config.get("target_update_interval", 10000)
+        exploration_initial_eps = training_config.get("exploration_initial_eps", 1.0)
+        exploration_final_eps = training_config.get("exploration_final_eps", 0.05)
+        exploration_fraction = training_config.get("exploration_fraction", 0.1)
+        policy_kwargs = training_config.get("policy_kwargs")
+
+        dqn_kwargs = dict(
             learning_rate=learning_rate,
             buffer_size=buffer_size,
             learning_starts=learning_starts,
             batch_size=batch_size,
             gamma=gamma,
+            train_freq=train_freq,
+            target_update_interval=target_update_interval,
+            exploration_initial_eps=exploration_initial_eps,
+            exploration_final_eps=exploration_final_eps,
+            exploration_fraction=exploration_fraction,
+            gradient_steps=gradient_steps,
+        )
+
+        if policy_kwargs is not None:
+            dqn_kwargs["policy_kwargs"] = policy_kwargs
+
+        model = DQN(
+            "MlpPolicy",
+            train_env,
             verbose=1,
             tensorboard_log=tb_log_dir,
             device=device,
+            seed=seed,
+            **dqn_kwargs,
         )
-        
+
     else:
         raise ValueError(f"Unknown algorithm: {algorithm}")
     
@@ -231,6 +288,9 @@ def train_rl_agent(
         yaml.dump(config, f)
     print(f"Configuration saved to: {config_save_path}")
     
+    train_env.close()
+    eval_env.close()
+
     return model
 
 
@@ -361,7 +421,7 @@ def main():
     parser.add_argument(
         "--save-path",
         type=str,
-        default="models",
+        default="my_models",
         help="Directory to save trained models",
     )
     parser.add_argument(
