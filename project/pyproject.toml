@@ -1,0 +1,57 @@
+[project]
+name = "tes-heatex-optimization"
+version = "0.1.0"
+description = "A Python-based simulation and optimization system for heat exchangers integrated with thermal energy storage (TES) that operates under time-of-use (TOU) electricity pricing, using deep reinforcement learning."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Project Contributors"}
+]
+requires-python = ">=3.8.1"
+dependencies = [
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "pyyaml>=6.0",
+    "gymnasium>=0.29.0",
+    "stable-baselines3>=2.0.0",
+    "scipy>=1.10.0",
+    "seaborn>=0.12.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.3.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.3.0",
+    "flake8>=6.0.0",
+    "mypy>=1.3.0",
+]
+
+[project.scripts]
+tes-heatex = "main:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["env*", "models*", "baselines*", "rl_algorithms*", "simulate*", "metrics*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--verbose"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true

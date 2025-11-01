@@ -1,0 +1,44 @@
+# workspace
+.trae
+.idea
+.vscode
+.windsurf
+prompt
+.augment
+*.zip
+
+# latex
+*.toc
+*.aux
+*.out
+*.synctex.gz
+*.log
+*.bbl
+*.bcf
+*.fls
+*.pdf
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+.env
+.npz
+.venv/
+build/
+egg-info/
+
+# project artifacts
+project/.python-version
+project/.venv/
+project/__pycache__/
+project/**/__pycache__/
+project/demo_logs/
+project/demo_models/
+project/demo_comparison.png
+project/tes_heatex_optimization.egg-info/
+project/uv.lock
+project/logs/
+*.egg

@@ -1,0 +1,143 @@
+# Default configuration for TES-HeatEx optimization system
+
+# Simulation parameters
+simulation:
+  timestep: 3600  # seconds (1 hour)
+  duration: 8760  # hours (1 year)
+  seed: 42
+
+# Thermal Energy Storage parameters
+tes:
+  type: "sensible"  # sensible or pcm
+  mass: 5000  # kg
+  specific_heat: 4.18  # kJ/(kg·K) for water
+  initial_temperature: 45.0  # °C
+  min_temperature: 40.0  # °C
+  max_temperature: 50.0  # °C
+  
+  # For PCM
+  melting_point: 45.0  # °C
+  latent_heat: 200.0  # kJ/kg
+  
+  # Losses
+  loss_coefficient: 0.5  # W/K
+  ambient_temperature: 20.0  # °C
+
+# Heat Exchanger parameters
+heat_exchanger:
+  type: "effectiveness_ntu"  # effectiveness_ntu or lmtd
+  heat_transfer_area: 50.0  # m²
+  overall_heat_transfer_coefficient: 0.5  # kW/(m²·K)
+  effectiveness: 0.85
+  flow_arrangement: "counterflow"  # parallel, counterflow, crossflow
+
+# Electric heater parameters
+electric_heater:
+  max_power: 100.0  # kW
+  efficiency: 0.98
+
+# Heat pump parameters (optional)
+heat_pump:
+  enabled: false
+  cop_heating: 3.5
+  cop_cooling: 3.0
+  max_power: 50.0  # kW
+
+# Time-of-Use (TOU) electricity pricing (CNY/kWh)
+tou_pricing:
+  peak_price: 1.2
+  shoulder_price: 0.7
+  offpeak_price: 0.3
+  
+  # Time periods (hour of day)
+  peak_hours: [[10, 12], [18, 21]]
+  shoulder_hours: [[8, 10], [12, 18]]
+  offpeak_hours: [[21, 24], [0, 8]]
+
+# Heat demand profile
+heat_demand:
+  type: "synthetic"  # synthetic or from_file
+  base_load: 30.0  # kW
+  peak_load: 80.0  # kW
+  profile_file: null
+
+# RL Environment parameters
+rl_env:
+  observation_space:
+    include_temperature: true
+    include_soc: true
+    include_price_forecast: true
+    price_forecast_hours: 6
+    include_demand: true
+    include_time_features: true
+  
+  action_space:
+    type: "discrete"  # discrete or continuous
+    n_actions: 3  # charge, discharge, idle
+    # For continuous
+    min_power: -100.0  # kW (negative = discharge)
+    max_power: 100.0  # kW (positive = charge)
+  
+  reward:
+    cost_weight: -1.0
+    temperature_violation_penalty: 10.0
+    demand_violation_penalty: 20.0
+    cycling_penalty: 0.1
+
+# Baseline controller parameters
+baseline:
+  type: "simple_tou"  # simple_tou, predictive
+  charge_in_offpeak: true
+  discharge_in_peak: true
+  temperature_hysteresis: 2.0  # °C
+
+# RL training parameters
+training:
+  algorithm: "SAC"  # PPO, SAC, DQN
+  total_timesteps: 200000
+  learning_rate: 0.0003
+  batch_size: 64
+  gamma: 0.99
+  
+  # PPO specific
+  n_steps: 2048
+  n_epochs: 10
+  
+  # SAC specific
+  buffer_size: 100000
+  learning_starts: 1000
+  tau: 0.005
+  
+  # Evaluation
+  eval_freq: 10000
+  n_eval_episodes: 10
+  
+  # Saving
+  save_freq: 50000
+  log_dir: "logs"
+  model_dir: "models"
+
+# Evaluation parameters
+evaluation:
+  n_episodes: 20
+  scenarios:
+    - name: "baseline_scenario"
+      description: "Standard operation"
+    - name: "high_demand"
+      description: "20% increased demand"
+      demand_multiplier: 1.2
+    - name: "price_spike"
+      description: "50% increased peak prices"
+      price_multiplier: 1.5
+
+# Metrics and reporting
+metrics:
+  calculate_cost_savings: true
+  calculate_energy_efficiency: true
+  calculate_temperature_violations: true
+  calculate_demand_satisfaction: true
+  calculate_storage_utilization: true
+  
+  output_dir: "results"
+  save_plots: true
+  save_csv: true

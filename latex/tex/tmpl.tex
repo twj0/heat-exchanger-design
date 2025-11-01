@@ -1,0 +1,288 @@
+% !TeX program = xelatex
+\documentclass[12pt,a4paper,fontset=windows]{ctexart}
+
+% 版心与段落
+\usepackage[left=2.5cm,right=2.5cm,top=2.8cm,bottom=2.8cm]{geometry}
+\usepackage{setspace}
+\setstretch{1.25}  % 对应说明里的"多倍 1.25 倍行距"
+
+\setCJKfamilyfont{myhei}{SimHei}[AutoFakeBold=2]
+\renewcommand{\heiti}{\CJKfamily{myhei}}
+
+\usepackage{titlesec}
+% 一级/二级/三级标题黑体字号：小三 / 四号 / 小四
+\titleformat{\section}{\heiti\fontsize{15pt}{18pt}\selectfont}{\thesection\ }{0.5em}{}
+\titleformat{\subsection}{\heiti\fontsize{12pt}{14pt}\selectfont}{\thesubsection\ }{0.5em}{}
+\titleformat{\subsubsection}{\heiti\fontsize{10.5pt}{13pt}\selectfont}{\thesubsubsection\ }{0.5em}{}
+\titlespacing*{\section}{0pt}{0.8ex plus .2ex}{0.6ex}
+\titlespacing*{\subsection}{0pt}{0.6ex}{0.4ex}
+\titlespacing*{\subsubsection}{0pt}{0.5ex}{0.3ex}
+
+% 段落缩进与间距
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+
+% 数学与编号（实现 "3-2-1" 的公式编号样式）
+\usepackage{amsmath,amssymb}
+\numberwithin{equation}{subsection}
+\renewcommand{\theequation}{\thesection-\arabic{subsection}-\arabic{equation}}
+
+% 图表
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% 参考文献（示意，按需要换成 biblatex/bst）
+
+
+% 超链接
+\usepackage[hidelinks]{hyperref}
+
+% —— 下划线工具（可控厚度、留白长度）——
+\usepackage[normalem]{ulem} % 提供 \uline
+\ULdepth = 0.8ex
+\renewcommand\ULthickness{.6pt}
+% 可控长度的下划线填空：\fillin{标签}{5cm}
+\newcommand{\fillin}[2]{\makebox[#2]{\uline{\hspace*{#2}}}\hspace{-#2}\makebox[#2][l]{#1\hfill}}
+
+% 统一小四号/五号快速命令
+\newcommand{\xiaosi}{\fontsize{12pt}{16pt}\selectfont}
+\newcommand{\wuhao}{\fontsize{10.5pt}{14pt}\selectfont}
+
+% 封面样式
+\newcommand{\Cover}{
+  \begin{titlepage}
+    \centering
+    {\heiti\fontsize{18pt}{22pt}\selectfont 东莞理工学院化学工程与能源技术学院\par}
+    \vspace{12pt}
+    {\heiti\fontsize{22pt}{26pt}\selectfont 换热器课程设计\par}
+    \vspace{6pt}
+    {\heiti\fontsize{20pt}{24pt}\selectfont 报告书\par}
+    \vspace{24pt}
+
+    \begin{tabular}{@{}p{5em}p{26em}@{}}
+    \wuhao 设计题目： & \uline{\hfill \hfill \hfill \hfill \hfill} \\
+    \wuhao 专\hspace{1.2em}业： & 能源与动力工程 \\
+    \wuhao 班\hspace{1.2em}级： & 2023能源动力1班 \\
+    \wuhao 学生姓名： & wjTang \\
+    \wuhao 学\hspace{1.2em}号： & 2023428020130 \\
+    \wuhao 指导教师： & 胡冰 \\
+    \wuhao 年\hspace{1.2em}月\hspace{1.2em}日： & \uline{\hfill \hfill \hfill \hfill \hfill} \\
+    \end{tabular}
+
+    \vfill
+  \end{titlepage}
+}
+
+% "课程设计任务书"区块（含下划线填空与分周进度）
+\newenvironment{TaskSheet}{
+  \section*{课程设计任务书}
+  \addcontentsline{toc}{section}{课程设计任务书}
+  \wuhao
+  \begin{tabular}{@{}p{8em}p{26em}@{}}
+  专业： & 能源与动力工程 \\
+  班级： & 2023能源动力1班 \\
+  学生姓名： & wjTang \\
+  学号： & 2023428020130 \\
+  指导教师： & 胡冰 \\
+  设计题目： & \uline{\hfill \hfill \hfill \hfill \hfill} \\
+  \end{tabular}
+
+  \vspace{0.6em}
+  \noindent\heiti 设计目的、主要内容（参数、方法）及要求\par
+}{
+}
+
+% —— 评分标准表：稳健、可复制、无花哨线型，跨页兼容 —— 
+% 宽度列型
+\newcolumntype{Y}{>{\wuhao\centering\arraybackslash}p{6.5em}}
+\newcolumntype{M}[1]{>{\wuhao\centering\arraybackslash}m{#1}}
+\newcolumntype{L}[1]{>{\wuhao\raggedright\arraybackslash}m{#1}}
+
+\newenvironment{RubricTable}{
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|M{8em}|L{9em}|Y|Y|Y|Y|M{6em}|M{5em}|}
+}{
+\end{tabular}
+\end{table}
+}
+
+\begin{document}
+
+% 封面
+\Cover
+
+% 任务书
+\begin{TaskSheet}
+\textbf{设计目的：}\\[-0.2em]
+培养综合运用所学知识、查阅换热器资料获取有关知识和数据、进行换热设备初步设计的能力。培养独立工作及发现问题、分析问题、解决问题的能力。提高计算能力、培养工程实际观念。熟悉掌握常用软件的使用。培养认真的学风和工作作风。
+
+\vspace{0.6em}
+\textbf{主要内容：}\\[-0.2em]
+根据峰谷电电价差异及蓄热应用，设计一种新型的换热器设备并进行相应的理论分析和计算。
+
+\vspace{0.6em}
+\textbf{要求：}
+\begin{enumerate}\wuhao
+\item 确定应用地区（峰谷电差价）；
+\item 具体场合（建筑、小区；进出水/蒸汽温度；流量；供热量）；
+\item 换热器形式（何种类型换热器结构、二维或三维图）；
+\item 换热器尺寸，热量衡算（温度，面积，换热系数等）；
+\item 经济性分析；
+\item 总结；
+\item 发挥能力，争取做到具有一定的应用和创新。
+\end{enumerate}
+
+\vspace{0.6em}
+\textbf{进度安排}\\[-0.2em]
+\wuhao
+~ 第1周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+第2--3周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+第4--5周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+第6--10周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+第11周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+第12--14周：\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+
+\vspace{0.6em}
+\textbf{主要参考资料}\ \uline{\hfill\hfill\hfill\hfill\hfill}\par
+
+\vspace{1.2em}
+\hfill 指导教师签字：\ \uline{\hspace{6em}}
+\end{TaskSheet}
+
+% 摘要与关键词
+\section*{摘\hspace{1em}要}
+\addcontentsline{toc}{section}{摘要}
+\xiaosi（中文摘要小四号宋体，段首缩进2字，1.5倍/或1.25倍行距按需调整。摘要精炼，交代研究对象、方法、结论与意义。）
+
+\vspace{0.5em}
+\noindent\textbf{\xiaosi 关键词：} \xiaosi 关键词1，关键词2，关键词3，关键词4，关键词5
+
+% 目录
+\clearpage
+{\heiti\fontsize{16pt}{19pt}\selectfont 目\hspace{1em}录}\par
+\vspace{0.5em}
+\tableofcontents
+\clearpage
+
+% 正文示意（严格按照模板小节结构）
+\section{课程设计的定义和目的}
+\subsection{课程设计的定义}
+课程设计是“针对某一门”课程的要求，对学生进行综合性训练的过程，其中包括参考资料的查找、相关工具的应用以及课程设计文本的撰写和设计的实现或仿真等。
+
+\subsection{课程设计的目的}
+课程设计的目的在于培养学生运用课程中所学到的理论知识，解决实际问题的能力，培养学生查阅资料文献的能力，培养学生使用相关软件的能力，培养学生动手的能力，培养学生规范撰写的能力等。
+
+\section{课程设计准备工作}
+孔子曰“工欲善其事，必先利其器。”
+\subsection{相关文献、书目的准备}
+（此处照模板说明撰写）
+\subsection{相关工具软件的准备}
+（此处照模板说明撰写）
+
+\section{课程设计撰写}
+\subsection{摘要的格式}
+（一级标题排版、中文摘要/关键词小四宋体，英文摘要 Times New Roman 小四，1.5 倍行距，关键词 3--5 个，用逗号分隔）
+\subsection{标题及正文文字的格式}
+（正文小四宋体；段首缩进 2 字；行距多倍 1.25）
+\subsection{目录格式}
+（用大纲级别自动生成；目录上方“目录”二字，黑体三号）
+\subsection{数学表达式的格式}
+示例：
+\begin{equation}
+E = mc^2
+\end{equation}
+上式编号样式为“3-2-1”，右对齐引用同上。
+\subsection{图、表的格式}
+（图题：五号宋体加粗，图与正文空一行；表题置于表上方、顶格、五号宋体加粗）
+
+% —— 课程设计报告评分标准（完整可分页表格）——
+\clearpage
+\section*{课程设计报告评分标准}
+\addcontentsline{toc}{section}{课程设计报告评分标准}
+
+\begin{RubricTable}
+\hline
+教学目标要求 & 评分标准 & 90--100 & 80--89 & 60--79 & 0--59 & 权重（\%） & 评分 \\
+\hline
+目标1：学习态度与主动性 &
+在具体的工作实际中，能够认真对待自己所承担的相应任务，表现出极佳的学习态度和学习能力。能够根据下达的课程设计任务，主动构思设计方案，确定设计流程，制定设计目标，能够积极地与小组成员进行问题的讨论、分析并提出初步的解决方法。 &
+\checkmark & & & & 20 & \\
+\cline{2-8}
+目标1：学习态度与主动性 &
+在具体的工作实际中，能够认真对待自己所承担的相应任务，表现出较好的学习态度和学习能力。能够根据下达的课程设计任务，构思设计方案，确定设计流程，制定设计目标，能够与小组成员进行问题的讨论、分析并提出初步的解决方法。 & & \checkmark & & & & \\
+\cline{2-8}
+目标1：学习态度与主动性 &
+在具体的工作中，较认真地完成了相关课程设计任务，学习态度较好，能够根据下达课程设计任务，参与构思设计方案，制定设计目标。 & & & \checkmark & & & \\
+\cline{2-8}
+目标1：学习态度与主动性 &
+在整个课程设计的过程中，学习态度较差，缺乏学习主动性，出勤率较低。在下达课程设计任务之后，不能主动制定设计目标，对自己承担的任务认识较为混乱。 & & & & \checkmark & & \\
+\hline
+
+目标2：方案与分析能力 &
+在设计方案的讨论过程中，表现出良好的思考能力和逻辑分析能力，对问题的解决表现出强烈的愿望。设计合理、理论分析与计算正确，文献查阅能力强、引用合理、调查调研非常合理、可信。 &
+\checkmark & & & & 25 & \\
+\cline{2-8}
+目标2：方案与分析能力 &
+在设计方案的讨论过程中，表现出较好的思考能力和逻辑分析能力，对问题的解决表现出良好的主动性。设计合理、理论分析与计算正确，文献引用、调查调研比较合理、可信。 & & \checkmark & & & & \\
+\cline{2-8}
+目标2：方案与分析能力 &
+在设计方案的论证过程中，能够提出自己的建议，能够针对课程设计中遇到的相关问题提出解决方法。设计合理，理论分析与计算基本正确，主要文献引用、调查调研比较可信。 & & & \checkmark & & & \\
+\cline{2-8}
+目标2：方案与分析能力 &
+在下达课程设计任务之后，不能主动制定设计目标，对自己承担的任务认识较为混乱。设计不合理，理论分析与计算有原则错误，文献引用、调查调研有较大的问题。 & & & & \checkmark & & \\
+\hline
+
+目标3：实验与动手能力 &
+实验数据准确，有很强的实际动手能力和计算机应用能力。 &
+\checkmark & & & & 30 & \\
+\cline{2-8}
+目标3：实验与动手能力 &
+实验数据比较准确，有较强的实际动手能力和计算机应用能力。 & & \checkmark & & & & \\
+\cline{2-8}
+目标3：实验与动手能力 &
+实验数据比较准确，有一定的实际动手能力。 & & & \checkmark & & & \\
+\cline{2-8}
+目标3：实验与动手能力 &
+实验数据不可靠，实际动手能力差。 & & & & \checkmark & & \\
+\hline
+
+目标4：报告与图纸规范性 &
+最终的设计报告结构严谨，逻辑性强，层次清晰，语言准确，文字流畅，完全符合规范化要求，书写工整或用计算机打印成文；图纸非常工整、清晰。 &
+\checkmark & & & & 25 & \\
+\cline{2-8}
+目标4：报告与图纸规范性 &
+最终的设计报告结构合理，符合逻辑，文章层次分明，语言准确，文字流畅，符合规范化要求，书写工整或用计算机打印成文；图纸工整、清晰。 & & \checkmark & & & & \\
+\cline{2-8}
+目标4：报告与图纸规范性 &
+最终的设计报告结构合理，层次较为分明，文理通顺，基本达到规范化要求，书写比较工整；图纸比较工整、清晰。 & & & \checkmark & & & \\
+\cline{2-8}
+目标4：报告与图纸规范性 &
+最终的设计报告内容空泛，结构混乱，文字表达不清，错别字较多，达不到规范化要求；图纸不工整或不清晰。 & & & & \checkmark & & \\
+\hline
+\end{RubricTable}
+
+\vspace{0.8em}
+\noindent \wuhao 指导教师签名：\ \uline{\hspace{8em}} \hfill 指导教师评定成绩：\ \uline{\hspace{8em}}
+
+% 参考文献（示例）
+\clearpage
+\section*{参 考 文 献}
+\addcontentsline{toc}{section}{参 考 文 献}
+\wuhao
+[1] 王化成. 高级财务管理学[M]. 北京: 中国人民大学出版社, 2003: 15--18\par
+[2] 巩亦平. 中小企业财务管理中存在的问题及对策[J]. 财会研究, 2005, (3): 16--20
+
+% 附录
+\clearpage
+\section*{附\hspace{1em}录}
+\addcontentsline{toc}{section}{附 录}
+\wuhao 课程设计中的程序如下：\par
+\bigskip
+\noindent\framebox[\textwidth]{\parbox{0.96\textwidth}{\wuhao 在此粘贴或附程序/代码等附录材料。}}
+
+\end{document}
