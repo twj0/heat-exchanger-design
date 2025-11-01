@@ -18,6 +18,11 @@ prompt
 *.bcf
 *.fls
 *.pdf
+*.fdb_latexmk
+*.run.xml
+*.tex~
+*.bib~
+latex/main/
 
 # python
 __pycache__/
@@ -42,4 +47,5 @@ project/demo_comparison.png
 project/tes_heatex_optimization.egg-info/
 project/uv.lock
 project/logs/
+project/my_models/
 *.egg
