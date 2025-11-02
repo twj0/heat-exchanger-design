@@ -96,7 +96,7 @@ class MetricsCalculator:
         
         # Calculate efficiency
         storage_efficiency = (
-            total_discharged / total_charged if total_charged > 0 else 0.0
+            total_delivered / total_charged if total_charged > 0 else 0.0
         )
         
         demand_satisfaction = (

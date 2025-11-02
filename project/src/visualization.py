@@ -11,13 +11,53 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 # Adopt a publication-ready aesthetic inspired by Energy Reports figures.
-sns.set_theme(style="whitegrid", context="talk", palette="Paired")
+sns.set_theme(style="whitegrid", context="paper", palette="colorblind")
+mpl.rcParams.update({
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "Times", "Nimbus Roman No9 L", "DejaVu Serif"],
+    "axes.titlesize": 10,
+    "axes.labelsize": 8,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "legend.fontsize": 7,
+    "figure.dpi": 300,
+    "savefig.dpi": 300,
+    "lines.linewidth": 1.8,
+    "grid.alpha": 0.3,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+})
+
+ER_COLORS = {
+    "Baseline": "#1f77b4",
+    "DRL": "#d62728",
+    "Demand": "#222222",
+}
+
+LINESTYLES = {
+    "Baseline": "--",
+    "DRL": "-",
+}
+
+def _cm_to_in(cm: float) -> float:
+    return cm / 2.54
+
+def _figsize_cm(width_cm: float = 12.0, nrows: int = 1, ncols: int = 1, height_scale: float = 0.9) -> tuple[float, float]:
+    width_in = _cm_to_in(width_cm)
+    height_in = width_in * (nrows / max(ncols, 1)) * height_scale
+    return (width_in, height_in)
+
+def _savefig(fig: plt.Figure, path: Path) -> None:
+    fig.savefig(path, dpi=300, bbox_inches="tight")
 
 
 def _ensure_directory(path: Path) -> None:
@@ -230,7 +270,7 @@ def export_metric_summary(
     energy_baseline = baseline.get("energy", {})
     energy_rl = rl.get("energy", {})
     _append_metric(
-        "Demand Satisfaction Rate",
+        "TES Coverage",
         f"{energy_baseline.get('demand_satisfaction_rate', float('nan')):.2%}",
         f"{energy_rl.get('demand_satisfaction_rate', float('nan')):.2%}",
     )
@@ -298,20 +338,135 @@ def create_reward_timestep_curve(
             f"missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    ax.plot(training_df["timesteps"], training_df[reward_column], linewidth=2)
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75),
+        constrained_layout=True,
+    )
+    ax.plot(training_df["timesteps"], training_df[reward_column])
     ax.set_title("Training Reward vs. Timesteps")
     ax.set_xlabel("Timesteps")
     ax.set_ylabel("Episode Reward")
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(f"Unable to save reward curve to {figure_path}") from exc
     finally:
         plt.close(fig)
 
+
+def create_single_metric_comparison_figure(
+    comparison_data: Dict[str, Dict[str, float]],
+    metric: str,
+    figure_path: Path,
+) -> None:
+    """Create a two-bar comparison figure for a single metric.
+
+    metric one of: 'total_cost', 'storage_efficiency', 'tes_coverage', 'temp_violation_rate'
+    """
+
+    if not comparison_data:
+        raise ValueError("comparison_data is empty; cannot create metric figure.")
+
+    if "baseline" not in comparison_data or "rl" not in comparison_data:
+        raise KeyError("comparison_data must contain 'baseline' and 'rl' entries.")
+
+    b = comparison_data["baseline"]
+    r = comparison_data["rl"]
+
+    if metric == "total_cost":
+        label = "Total Cost (CNY)"
+        y_label = "Cost (CNY)"
+        b_val = float(b["cost"]["total_cost"])  # type: ignore[index]
+        r_val = float(r["cost"]["total_cost"])  # type: ignore[index]
+        low_better = True
+    elif metric == "storage_efficiency":
+        label = "Storage Efficiency (%)"
+        y_label = "Percent (%)"
+        b_val = float(b["energy"]["storage_efficiency"]) * 100.0  # type: ignore[index]
+        r_val = float(r["energy"]["storage_efficiency"]) * 100.0  # type: ignore[index]
+        low_better = False
+    elif metric == "tes_coverage":
+        label = "TES Coverage (%)"
+        y_label = "Percent (%)"
+        b_val = float(b["energy"]["demand_satisfaction_rate"]) * 100.0  # type: ignore[index]
+        r_val = float(r["energy"]["demand_satisfaction_rate"]) * 100.0  # type: ignore[index]
+        low_better = False
+    elif metric == "temp_violation_rate":
+        label = "Temp Violation Rate (%)"
+        y_label = "Percent (%)"
+        b_val = float(b["temperature"]["violation_rate"]) * 100.0  # type: ignore[index]
+        r_val = float(r["temperature"]["violation_rate"]) * 100.0  # type: ignore[index]
+        low_better = True
+    else:
+        raise ValueError(f"Unsupported metric: {metric}")
+
+    x = np.arange(2)
+    width = 0.5
+
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(10.0, nrows=1, ncols=1, height_scale=0.7),
+        constrained_layout=True,
+    )
+
+    bars = ax.bar(x, [b_val, r_val], width=width, color=[ER_COLORS["Baseline"], ER_COLORS["DRL"]])
+    ax.set_title(label)
+    ax.set_ylabel(y_label)
+    ax.set_xticks(x)
+    ax.set_xticklabels(["Baseline", "DRL"])
+    ax.grid(axis="y", alpha=0.3)
+
+    for rect, h in zip(bars, [b_val, r_val]):
+        ax.text(rect.get_x() + rect.get_width() / 2, h, f"{h:.2f}", ha="center", va="bottom", fontsize=7)
+
+    if b_val != 0:
+        if low_better:
+            delta = (b_val - r_val) / b_val * 100.0
+        else:
+            delta = (r_val - b_val) / b_val * 100.0
+    else:
+        delta = 0.0
+
+    y = max(b_val, r_val)
+    ax.text(0.5, y * 1.04 if y != 0 else 0.04, f"Δ {delta:+.1f}%", ha="center", va="bottom", fontsize=7, color="#444444")
+
+    try:
+        _savefig(fig, figure_path)
+    except OSError as exc:
+        raise IOError(f"Unable to save metric figure to {figure_path}") from exc
+    finally:
+        plt.close(fig)
+
+
+def generate_performance_metric_figures(
+    comparison_data: Dict[str, Dict[str, float]],
+    figure_dir: Path | str,
+) -> Dict[str, Path]:
+    """Generate four separate metric figures and return their paths."""
+
+    out_dir = Path(figure_dir)
+    _ensure_directory(out_dir)
+
+    paths: Dict[str, Path] = {}
+
+    p1 = out_dir / "tes_performance_cost.png"
+    create_single_metric_comparison_figure(comparison_data, "total_cost", p1)
+    paths["performance_cost"] = p1
+
+    p2 = out_dir / "tes_performance_storage_efficiency.png"
+    create_single_metric_comparison_figure(comparison_data, "storage_efficiency", p2)
+    paths["performance_storage_efficiency"] = p2
+
+    p3 = out_dir / "tes_performance_tes_coverage.png"
+    create_single_metric_comparison_figure(comparison_data, "tes_coverage", p3)
+    paths["performance_tes_coverage"] = p3
+
+    p4 = out_dir / "tes_performance_temp_violation_rate.png"
+    create_single_metric_comparison_figure(comparison_data, "temp_violation_rate", p4)
+    paths["performance_temp_violation_rate"] = p4
+
+    return paths
 
 def create_learning_curve(
     training_df: pd.DataFrame,
@@ -336,15 +491,18 @@ def create_learning_curve(
         center=False,
     ).mean()
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    ax.plot(training_df["timesteps"], smoothed, linewidth=2)
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75),
+        constrained_layout=True,
+    )
+    ax.plot(training_df["timesteps"], smoothed)
     ax.set_title("Learning Curve (Smoothed Reward)")
     ax.set_xlabel("Timesteps")
     ax.set_ylabel("Rolling Mean Reward")
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(f"Unable to save learning curve to {figure_path}") from exc
     finally:
@@ -367,15 +525,18 @@ def create_episode_length_curve(
             f"are missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    ax.plot(training_df["timesteps"], training_df[length_column], linewidth=2)
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75),
+        constrained_layout=True,
+    )
+    ax.plot(training_df["timesteps"], training_df[length_column])
     ax.set_title("Episode Length Across Training")
     ax.set_xlabel("Timesteps")
     ax.set_ylabel("Episode Length (steps)")
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(
             f"Unable to save episode length curve to {figure_path}"
@@ -400,8 +561,11 @@ def create_success_rate_curve(
             f"are missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    ax.plot(training_df["timesteps"], training_df[success_column], linewidth=2)
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75),
+        constrained_layout=True,
+    )
+    ax.plot(training_df["timesteps"], training_df[success_column])
     ax.set_title("Training Success Rate")
     ax.set_xlabel("Timesteps")
     ax.set_ylabel("Success Rate")
@@ -409,7 +573,7 @@ def create_success_rate_curve(
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(f"Unable to save success rate curve to {figure_path}") from exc
     finally:
@@ -432,19 +596,106 @@ def create_training_iteration_curve(
             f"columns are missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    ax.plot(training_df["timesteps"], training_df[iteration_column], linewidth=2)
+    fig, ax = plt.subplots(
+        figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75),
+        constrained_layout=True,
+    )
+    ax.plot(training_df["timesteps"], training_df[iteration_column])
     ax.set_title("Training Episodes vs. Timesteps")
     ax.set_xlabel("Timesteps")
     ax.set_ylabel("Episode Index")
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(
             f"Unable to save training iteration curve to {figure_path}"
         ) from exc
+    finally:
+        plt.close(fig)
+
+
+def create_training_overview_figure(
+    training_df: pd.DataFrame,
+    figure_path: Path,
+    reward_column: str = "episode_reward",
+    success_column: str = "success_rate",
+    smoothing_window: int = 20,
+    convergence_window: int = 30,
+    convergence_rel_slope: float = 0.005,
+) -> None:
+    """Create a compact training overview with smoothed reward and success.
+
+    Adds a convergence region where the normalised slope of the smoothed reward
+    stays below a relative threshold up to the end of training.
+    """
+
+    required = {"timesteps", reward_column}
+    missing = required.difference(training_df.columns)
+    if missing:
+        missing_str = ", ".join(sorted(missing))
+        raise ValueError(
+            "Cannot create training overview because the following columns are "
+            f"missing: {missing_str}."
+        )
+
+    x = training_df["timesteps"].to_numpy()
+    y = training_df[reward_column].to_numpy()
+    y_smooth = pd.Series(y).rolling(window=smoothing_window, min_periods=1).mean().to_numpy()
+
+    fig, (ax1, ax2) = plt.subplots(
+        2,
+        1,
+        figsize=_figsize_cm(12.0, nrows=2, ncols=1, height_scale=0.95),
+        constrained_layout=True,
+        sharex=True,
+    )
+
+    ax1.plot(x, y, color=ER_COLORS.get("Baseline", "#1f77b4"), alpha=0.35, label="Reward (raw)")
+    ax1.plot(x, y_smooth, color=ER_COLORS.get("DRL", "#d62728"), label=f"Reward (smooth {smoothing_window})")
+    ax1.set_title("Training Reward (Raw & Smoothed)")
+    ax1.set_ylabel("Episode Reward")
+    ax1.grid(alpha=0.3)
+
+    # Convergence region detection (at the tail)
+    if len(x) >= max(convergence_window, 5):
+        slope = np.abs(np.gradient(y_smooth, x))
+        # Rolling mean slope
+        k = max(3, convergence_window)
+        kernel = np.ones(k) / k
+        mean_slope = np.convolve(slope, kernel, mode="same")
+        y_range = max(np.ptp(y_smooth), 1e-9)
+        cond = (mean_slope / y_range) < convergence_rel_slope
+        # Find last contiguous True segment ending at tail
+        tail_idx = len(cond) - 1
+        start_idx = None
+        if cond[tail_idx]:
+            j = tail_idx
+            while j >= 0 and cond[j]:
+                j -= 1
+            start_idx = j + 1
+        if start_idx is not None and start_idx < len(x) - 1:
+            ax1.axvspan(x[start_idx], x[-1], color="#2ca02c", alpha=0.12)
+            ax1.text(x[start_idx], ax1.get_ylim()[1], "Convergence", va="top", ha="left", fontsize=7, color="#2ca02c")
+
+    ax1.legend(loc="best", frameon=False)
+
+    if success_column in training_df.columns:
+        ax2.plot(x, training_df[success_column].to_numpy(), color="#9467bd", label="Success Rate")
+        ax2.set_ylabel("Success Rate")
+        ax2.set_ylim(0, 1)
+        ax2.legend(loc="best", frameon=False)
+    else:
+        ax2.plot(x, y_smooth, color=ER_COLORS.get("DRL", "#d62728"))
+        ax2.set_ylabel("Smoothed Reward")
+    ax2.set_xlabel("Timesteps")
+    ax2.grid(alpha=0.3)
+
+    try:
+        _savefig(fig, figure_path)
+    except OSError as exc:
+        raise IOError(f"Unable to save training overview figure to {figure_path}") from exc
     finally:
         plt.close(fig)
 
@@ -458,36 +709,70 @@ def create_performance_comparison_figure(
     if not comparison_data:
         raise ValueError("comparison_data is empty; cannot create comparison figure.")
 
-    melted_records: List[Dict[str, object]] = []
-    for metric_name, values in comparison_data.items():
-        if not isinstance(values, dict):
-            raise ValueError(
-                "comparison_data entries must map to dictionaries of controller values"
-            )
-        for controller, value in values.items():
-            melted_records.append(
-                {
-                    "Metric": metric_name,
-                    "Controller": controller,
-                    "Value": value,
-                }
-            )
+    metrics: List[tuple] = []
+    if "baseline" in comparison_data and "rl" in comparison_data:
+        b = comparison_data["baseline"]
+        r = comparison_data["rl"]
+        imp = comparison_data.get("improvements", {})
+        metrics = [
+            ("Total Cost (CNY)", b["cost"]["total_cost"], r["cost"]["total_cost"], True, imp.get("cost_savings_percent")),
+            ("Storage Efficiency (%)", b["energy"]["storage_efficiency"] * 100, r["energy"]["storage_efficiency"] * 100, False, None),
+            ("TES Coverage (%)", b["energy"]["demand_satisfaction_rate"] * 100, r["energy"]["demand_satisfaction_rate"] * 100, False, None),
+            ("Temp Violation Rate (%)", b["temperature"]["violation_rate"] * 100, r["temperature"]["violation_rate"] * 100, True, None),
+        ]
+    else:
+        melted_records: List[Dict[str, object]] = []
+        for metric_name, values in comparison_data.items():
+            if not isinstance(values, dict):
+                raise ValueError(
+                    "comparison_data entries must map to dictionaries of controller values"
+                )
+            baseline_v = values.get("Baseline")
+            rl_v = values.get("DRL")
+            if baseline_v is None or rl_v is None:
+                raise ValueError("Each metric must include 'Baseline' and 'DRL' values.")
+            is_lower_better = "cost" in metric_name.lower() or "violation" in metric_name.lower()
+            metrics.append((metric_name, baseline_v, rl_v, is_lower_better, None))
 
-    df = pd.DataFrame(melted_records)
-    required_columns = {"Metric", "Controller", "Value"}
-    if df.empty or required_columns.difference(df.columns):
-        raise ValueError("comparison_data did not yield a valid comparison table.")
+    labels = [m[0] for m in metrics]
+    baseline_vals = np.array([m[1] for m in metrics], dtype=float)
+    rl_vals = np.array([m[2] for m in metrics], dtype=float)
+    lower_is_better = [bool(m[3]) for m in metrics]
+    improvements = [m[4] for m in metrics]
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    sns.barplot(data=df, x="Metric", y="Value", hue="Controller", ax=ax)
-    ax.set_title("Baseline vs. DRL Performance Metrics")
+    x = np.arange(len(labels))
+    width = 0.38
+
+    fig, ax = plt.subplots(figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.75), constrained_layout=True)
+    bars_b = ax.bar(x - width / 2, baseline_vals, width, label="Baseline", color=ER_COLORS["Baseline"])
+    bars_r = ax.bar(x + width / 2, rl_vals, width, label="DRL", color=ER_COLORS["DRL"])
+
+    ax.set_title("Performance Metrics Comparison")
     ax.set_ylabel("Value")
     ax.set_xlabel("Metric")
-    ax.legend(loc="best")
-    ax.grid(alpha=0.3)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=15)
+    ax.legend(loc="upper right", frameon=False)
+    ax.grid(axis="y", alpha=0.3)
+
+    for bars in (bars_b, bars_r):
+        for rect in bars:
+            h = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2, h, f"{h:.2f}", ha="center", va="bottom", fontsize=7)
+
+    for i, (b, r, low_better, imp_pct) in enumerate(zip(baseline_vals, rl_vals, lower_is_better, improvements)):
+        if imp_pct is None:
+            if low_better:
+                delta = (b - r) / b * 100 if b != 0 else 0.0
+            else:
+                delta = (r - b) / b * 100 if b != 0 else 0.0
+        else:
+            delta = imp_pct
+        y = max(b, r)
+        ax.text(x[i] + width / 2, y * 1.02 if y != 0 else 0.02, f"Δ {delta:+.1f}%", ha="center", va="bottom", fontsize=7, color="#444444")
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(
             f"Unable to save performance comparison figure to {figure_path}"
@@ -499,7 +784,6 @@ def create_performance_comparison_figure(
 def create_time_series_figure(step_df: pd.DataFrame, figure_path: Path) -> None:
     """Generate a four-panel time-series overview highlighting TES behaviour."""
 
-    # Figure 1: Temporal evolution of temperature, state of charge, power, and cost.
     required = {"time_index", "temperature", "soc", "power_command", "cumulative_cost"}
     missing = required.difference(step_df.columns)
     if missing:
@@ -509,18 +793,21 @@ def create_time_series_figure(step_df: pd.DataFrame, figure_path: Path) -> None:
             f"are missing: {missing_str}."
         )
 
-    fig, axes = plt.subplots(2, 2, figsize=(16, 10), constrained_layout=True)
+    fig, axes = plt.subplots(2, 2, figsize=_figsize_cm(12.0, nrows=2, ncols=2, height_scale=1.0), constrained_layout=True, sharex=True)
 
+    # Stable controller order
+    controllers = [c for c in ["Baseline", "DRL"] if c in step_df["controller"].unique()]
     for controller, group in step_df.groupby("controller"):
-        axes[0, 0].plot(group["time_index"], group["temperature"], label=controller, linewidth=2)
-        axes[0, 1].plot(group["time_index"], group["soc"], label=controller, linewidth=2)
-        axes[1, 0].plot(group["time_index"], group["power_command"], label=controller, linewidth=2)
-        axes[1, 1].plot(group["time_index"], group["cumulative_cost"], label=controller, linewidth=2)
+        color = ER_COLORS.get(controller, None)
+        ls = LINESTYLES.get(controller, "-")
+        axes[0, 0].plot(group["time_index"], group["temperature"], label=controller, color=color, linestyle=ls)
+        axes[0, 1].plot(group["time_index"], group["soc"], label=controller, color=color, linestyle=ls)
+        axes[1, 0].plot(group["time_index"], group["power_command"], label=controller, color=color, linestyle=ls)
+        axes[1, 1].plot(group["time_index"], group["cumulative_cost"], label=controller, color=color, linestyle=ls)
 
     axes[0, 0].set_title("Storage Temperature Trajectory")
     axes[0, 0].set_ylabel("Temperature (°C)")
     axes[0, 0].axhspan(40, 50, color="lightgrey", alpha=0.3)
-    axes[0, 0].legend(loc="upper right")
 
     axes[0, 1].set_title("State of Charge Evolution")
     axes[0, 1].set_ylabel("State of Charge (-)")
@@ -537,10 +824,12 @@ def create_time_series_figure(step_df: pd.DataFrame, figure_path: Path) -> None:
     for ax in axes.flat:
         ax.grid(alpha=0.3)
 
-    fig.suptitle("TES Behaviour under Baseline and DRL Control", fontsize=20)
+    # Shared legend
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=len(set(labels)), frameon=False)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(f"Unable to save time-series figure to {figure_path}") from exc
     finally:
@@ -550,8 +839,7 @@ def create_time_series_figure(step_df: pd.DataFrame, figure_path: Path) -> None:
 def create_heat_balance_figure(step_df: pd.DataFrame, figure_path: Path) -> None:
     """Plot heat demand coverage to showcase comfort compliance."""
 
-    # Figure 2: Side-by-side heat demand vs delivery for each controller.
-    required = {"heat_demand", "heat_delivered", "controller"}
+    required = {"time_index", "heat_demand", "heat_delivered", "controller"}
     missing = required.difference(step_df.columns)
     if missing:
         missing_str = ", ".join(sorted(missing))
@@ -560,33 +848,66 @@ def create_heat_balance_figure(step_df: pd.DataFrame, figure_path: Path) -> None
             f"are missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.8), constrained_layout=True)
+    ax2 = ax.twinx()
 
-    melted = step_df.melt(
-        id_vars=["time_index", "controller"],
-        value_vars=["heat_demand", "heat_delivered"],
-        var_name="Series",
-        value_name="Heat (kW)",
-    )
+    controllers_present = step_df["controller"].unique().tolist()
+    df_b = step_df.loc[step_df["controller"] == "Baseline"].sort_values("time_index")
+    df_r = step_df.loc[step_df["controller"] == "DRL"].sort_values("time_index")
 
-    sns.lineplot(
-        data=melted,
-        x="time_index",
-        y="Heat (kW)",
-        hue="Series",
-        style="controller",
-        linewidth=2,
-        ax=ax,
-    )
+    if len(df_b) > 0:
+        t = df_b["time_index"].to_numpy()
+    elif len(df_r) > 0:
+        t = df_r["time_index"].to_numpy()
+    else:
+        raise ValueError("No data rows available to plot heat balance figure.")
 
-    ax.set_title("Heat Demand Tracking Performance")
+    demand_b = df_b["heat_demand"].to_numpy() if len(df_b) > 0 else None
+    demand_r = df_r["heat_demand"].to_numpy() if len(df_r) > 0 else None
+
+    if demand_b is not None and demand_r is not None and len(demand_b) == len(demand_r):
+        if not np.allclose(demand_b, demand_r, rtol=1e-4, atol=1e-6):
+            ref_demand = 0.5 * (demand_b + demand_r)
+        else:
+            ref_demand = demand_b
+    else:
+        ref_demand = demand_b if demand_b is not None else demand_r
+
+    ax.plot(t, ref_demand, color=ER_COLORS["Demand"], label="Heat Demand", linestyle="-", linewidth=1.8)
+
+    delivered_baseline = df_b["heat_delivered"].to_numpy() if len(df_b) > 0 else None
+    delivered_rl = df_r["heat_delivered"].to_numpy() if len(df_r) > 0 else None
+
+    if delivered_baseline is not None:
+        ax.plot(t, delivered_baseline, color=ER_COLORS.get("Baseline"), linestyle=LINESTYLES.get("Baseline", "-"), label="Baseline Delivered")
+        ax.fill_between(t, np.minimum(ref_demand, delivered_baseline), np.maximum(ref_demand, delivered_baseline), color=ER_COLORS.get("Baseline"), alpha=0.12, label="Gap (Baseline)")
+
+    if delivered_rl is not None:
+        ax.plot(t, delivered_rl, color=ER_COLORS.get("DRL"), linestyle=LINESTYLES.get("DRL", "-"), label="DRL Delivered")
+        ax.fill_between(t, np.minimum(ref_demand, delivered_rl), np.maximum(ref_demand, delivered_rl), color=ER_COLORS.get("DRL"), alpha=0.10, label="Gap (DRL)")
+
+    eps = 1e-9
+    if delivered_baseline is not None and demand_b is not None:
+        sat_baseline = np.clip(delivered_baseline / (demand_b + eps) * 100.0, 0, 150)
+        ax2.plot(t, sat_baseline, color=ER_COLORS.get("Baseline"), linestyle=":", label="Baseline Satisfaction (%)")
+    if delivered_rl is not None and demand_r is not None:
+        sat_rl = np.clip(delivered_rl / (demand_r + eps) * 100.0, 0, 150)
+        ax2.plot(t, sat_rl, color=ER_COLORS.get("DRL"), linestyle=":", label="DRL Satisfaction (%)")
+    ax2.axhline(100, color="#555555", linestyle="--", linewidth=1.2)
+    ax2.set_ylim(0, 150)
+
+    ax.set_title("Heat Demand vs. Delivered (with Satisfaction)")
     ax.set_xlabel("Timestep (index)")
-    ax.set_ylabel("Heat (kW)")
-    ax.legend(title="Series / Controller", loc="upper right")
+    ax.set_ylabel("Heat Power (kW)")
+    ax2.set_ylabel("Satisfaction (%)")
+
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, loc="upper right", frameon=False, ncol=2)
     ax.grid(alpha=0.3)
 
     try:
-        fig.savefig(figure_path, dpi=300)
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(f"Unable to save heat balance figure to {figure_path}") from exc
     finally:
@@ -596,7 +917,6 @@ def create_heat_balance_figure(step_df: pd.DataFrame, figure_path: Path) -> None
 def create_temperature_compliance_boxplot(step_df: pd.DataFrame, figure_path: Path) -> None:
     """Summarise temperature violations to underline control robustness."""
 
-    # Figure 3: Boxplot of temperature excursions relative to bounds.
     required = {"temperature", "controller"}
     missing = required.difference(step_df.columns)
     if missing:
@@ -606,19 +926,101 @@ def create_temperature_compliance_boxplot(step_df: pd.DataFrame, figure_path: Pa
             f"columns are missing: {missing_str}."
         )
 
-    fig, ax = plt.subplots(figsize=(8, 6), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=_figsize_cm(12.0, nrows=1, ncols=1, height_scale=0.7), constrained_layout=True)
 
-    sns.boxplot(data=step_df, x="controller", y="temperature", ax=ax)
-    ax.axhline(40, color="red", linestyle="--", linewidth=1.5, label="Lower Bound")
-    ax.axhline(50, color="red", linestyle="-.", linewidth=1.5, label="Upper Bound")
-    ax.set_title("Distribution of Storage Temperature")
+    cat_order = [c for c in ["Baseline", "DRL"] if c in step_df["controller"].unique()]
+    pal = {k: ER_COLORS[k] for k in ER_COLORS if k in (cat_order or step_df["controller"].unique())}
+    sns.boxplot(
+        data=step_df,
+        x="controller",
+        y="temperature",
+        hue="controller",
+        dodge=False,
+        order=cat_order if cat_order else None,
+        ax=ax,
+        palette=pal,
+        fliersize=2,
+    )
+    leg = ax.get_legend()
+    if leg is not None:
+        leg.remove()
+    sns.stripplot(
+        data=step_df,
+        x="controller",
+        y="temperature",
+        hue="controller",
+        dodge=False,
+        order=cat_order if cat_order else None,
+        ax=ax,
+        palette=pal,
+        alpha=0.35,
+        size=2,
+        jitter=0.1,
+    )
+    leg = ax.get_legend()
+    if leg is not None:
+        leg.remove()
+    ax.axhline(40, color="red", linestyle="--", linewidth=1.5)
+    ax.axhline(50, color="red", linestyle="--", linewidth=1.5)
+    ax.set_title("Temperature Distribution and Compliance")
     ax.set_ylabel("Temperature (°C)")
     ax.set_xlabel("Controller")
-    ax.legend()
     ax.grid(alpha=0.3)
 
+    bounds_low, bounds_high = 40.0, 50.0
+    rates = (
+        step_df.assign(violation=(step_df["temperature"].lt(bounds_low) | step_df["temperature"].gt(bounds_high)))
+        .groupby("controller")["violation"].mean()
+    )
+    ymax = ax.get_ylim()[1]
+    cats = cat_order if cat_order else list(step_df["controller"].unique())
+    for i, ctrl in enumerate(cats):
+        rate = float(rates.get(ctrl, 0.0)) * 100.0
+        ax.text(i, ymax * 0.98, f"{rate:.1f}%", ha="center", va="top", fontsize=7, color="#444444")
+
     try:
-        fig.savefig(figure_path, dpi=300)
+        axins = inset_axes(ax, width="35%", height="45%", loc="upper left", borderpad=1)
+        sns.boxplot(
+            data=step_df,
+            x="controller",
+            y="temperature",
+            hue="controller",
+            dodge=False,
+            order=cat_order if cat_order else None,
+            ax=axins,
+            palette=pal,
+            fliersize=2,
+        )
+        leg2 = axins.get_legend()
+        if leg2 is not None:
+            leg2.remove()
+        sns.stripplot(
+            data=step_df,
+            x="controller",
+            y="temperature",
+            hue="controller",
+            dodge=False,
+            order=cat_order if cat_order else None,
+            ax=axins,
+            palette=pal,
+            alpha=0.35,
+            size=2,
+            jitter=0.1,
+        )
+        leg2 = axins.get_legend()
+        if leg2 is not None:
+            leg2.remove()
+        axins.set_ylim(48, 50.5)
+        axins.axhline(40, color="red", linestyle="--", linewidth=1.0)
+        axins.axhline(50, color="red", linestyle="--", linewidth=1.0)
+        axins.set_xlabel("")
+        axins.set_ylabel("")
+        axins.grid(alpha=0.3)
+    except Exception:
+        pass
+
+    try:
+        _savefig(fig, figure_path)
     except OSError as exc:
         raise IOError(
             f"Unable to save temperature compliance figure to {figure_path}"
@@ -685,7 +1087,39 @@ def generate_training_figures(
     create_training_iteration_curve(training_df, iteration_curve_path)
     outputs["iteration_curve"] = iteration_curve_path
 
+    overview_path = figure_path / "tes_training_overview.png"
+    create_training_overview_figure(
+        training_df,
+        overview_path,
+        reward_column="episode_reward",
+        success_column="success_rate" if "success_rate" in training_df.columns else "success_rate",
+        smoothing_window=smoothing_window,
+    )
+    outputs["training_overview"] = overview_path
+
     return outputs
+
+
+def load_steps_from_csvs(baseline_csv: Path | str, rl_csv: Path | str) -> pd.DataFrame:
+
+    base_df = pd.read_csv(baseline_csv)
+    base_df["controller"] = "Baseline"
+    rl_df = pd.read_csv(rl_csv)
+    rl_df["controller"] = "DRL"
+
+    combined = pd.concat([base_df, rl_df], ignore_index=True)
+    if "step" in combined.columns:
+        combined = combined.sort_values(["controller", "step"]).reset_index(drop=True)
+    return _prepare_plotting_frame(combined)
+
+
+def generate_figures_from_csvs(
+    baseline_csv: Path | str,
+    rl_csv: Path | str,
+    figure_dir: Path | str,
+) -> Dict[str, Path]:
+    df = load_steps_from_csvs(baseline_csv, rl_csv)
+    return generate_publication_figures(df, figure_dir=figure_dir)
 
 
 def generate_outputs(
@@ -712,6 +1146,10 @@ def generate_outputs(
             output_dir=data_output_dir,
         )
         exported["metric_summary_csv"] = summary_csv
+        # Also generate a grouped performance comparison figure
+        comparison_figure_path = Path(figure_output_dir) / "tes_performance_comparison.png"
+        create_performance_comparison_figure(comparison_metrics, comparison_figure_path)
+        exported["performance_comparison_figure"] = comparison_figure_path
 
     # Rebuild dataframe for plotting using the just-exported CSV for reproducibility.
     step_df = pd.read_csv(step_csv)

@@ -449,6 +449,21 @@ R = w_cost * Cost + w_temp * Penalty_temp + w_demand * Penalty_demand + w_cycle 
 | `n_eval_episodes` | `training.n_eval_episodes` | 全部 | EvalCallback `n_eval_episodes` | `10` | 评估统计稳定性 |
 | `save_freq` | `training.save_freq` | 全部 | Checkpoint `save_freq` | `50000` | 定期保存模型以防中断 |
 
+### 5.5 默认配置与标准实验设置
+
+项目默认加载 `configs/default.yaml`，其关键物理含义如下：
+
+- **仿真步长 (`simulation.timestep = 3600 s`)**：代表 1 小时决策步长，与论文中基于小时级时间序列的 TRNSYS 职能模型保持一致，保证功率↔能量积分的量纲一致性。
+- **年内持续 (`simulation.duration = 8760 h`)**：覆盖完整年度的供暖/供冷工况，符合 Buscemi 等人将 DRL 控制器部署于整年负荷序列的研究设定。
+- **储能初始状态 (`tes.initial_temperature = 45 ℃`)**：位于 `min_temperature=40 ℃` 与 `max_temperature=50 ℃` 之间，对应论文中热罐安全温度窗口的中点，避免初期越界。
+- **换热器名义参数 (`heat_exchanger.heat_transfer_area = 50 m²`, `overall_heat_transfer_coefficient = 0.5 kW/(m²·K)`)**：在 ε-NTU 框架中确保 `NTU≈25`，模拟中等规模教学楼的板式换热器性能。
+- **电加热器额定功率 (`electric_heater.max_power = 100 kW`)**：作为可调节补热装置，与论文中“通过附加电功率调度实现削峰填谷”的设定一致。
+- **峰谷电价结构 (`tou_pricing.peak_price = 1.2`, `shoulder_price = 0.7`, `offpeak_price = 0.3` CNY/kWh)**：映射国内常见 TOU 政策，峰段时段设置为 `[10,12]`、`[18,21]`，为强化学习提供套利动机。
+- **合成热负荷 (`heat_demand.base_load = 30 kW`, `peak_load = 80 kW`)**：通过内建生成器构造日内波动，模仿论文中的课堂负荷上下限。
+- **奖励权重 (`rl_env.reward.cost_weight = -1.0`, `temperature_violation_penalty = 10`, `demand_violation_penalty = 20`)**：延续论文“以经济性为主、舒适性为约束”的理念，成本项系数为负以鼓励节约。
+
+当用户未指定配置时，`main.py` 与 `simulate/run_eval.py` 将采用上述默认设置执行训练与评估。若需复现论文中的标准场景，建议保留 1h 时间步长、全年持续仿真、峰谷电价与 40–50 ℃ 的 TES 温度窗口，仅在 `training` 区块内调整算法相关超参数以探索不同控制策略。
+
 ## 6. 总结
 
 本项目通过深度强化学习技术对热储能与换热系统进行优化控制，不仅在工程实践中具有重要意义，在学术研究和教育方面也具有很高价值。通过模块化的代码设计和详细的物理建模，我们构建了一个完整、可扩展的系统，为后续的研究和应用奠定了坚实基础。
