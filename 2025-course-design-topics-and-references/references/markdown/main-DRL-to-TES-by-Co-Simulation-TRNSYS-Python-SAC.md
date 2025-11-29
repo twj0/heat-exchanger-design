@@ -8,7 +8,7 @@ Research paper
 
 ## Deep reinforcement learning-based control of thermal energy storage for
 
-## university classrooms: Co-Simulation with TRNSYS-Python and transfer
+## university classrooms: Co-Simulation with **TRNSYS-Python** and transfer
 
 ## learning across operational scenarios
 
