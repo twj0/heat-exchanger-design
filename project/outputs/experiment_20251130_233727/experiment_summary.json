@@ -1,0 +1,17 @@
+{
+  "timestamp": "20251130_233727",
+  "config": {
+    "timesteps": 100000,
+    "pareto_timesteps": 50000,
+    "n_episodes": 20
+  },
+  "models": {
+    "SAC-Transformer": "D:\\\u5b66\u4e60\\\u5316\u80fd\u4efb\u9009\\\u6362\u70ed\u5668\u8bbe\u8ba1\\workspace\\project\\outputs\\models\\main_transformer_20251130_233749\\best_model.zip",
+    "SAC-TemporalTransformer": "D:\\\u5b66\u4e60\\\u5316\u80fd\u4efb\u9009\\\u6362\u70ed\u5668\u8bbe\u8ba1\\workspace\\project\\outputs\\models\\ablation_temporal_20251201_011615\\best_model.zip"
+  },
+  "results_summary": {
+    "best_by_reward": "SAC-TemporalTransformer",
+    "best_by_cost": "SAC-TemporalTransformer",
+    "best_by_carbon": "SAC-TemporalTransformer"
+  }
+}

@@ -8,6 +8,8 @@ prompt
 .augment
 *.zip
 fig
+*.markdown
+
 
 
 # latex
@@ -33,7 +35,7 @@ __pycache__/
 *.pyd
 *.pyi
 .env
-.npz
+*.npz
 .venv/
 build/
 egg-info/
@@ -53,3 +55,4 @@ project/demo_results/
 project/results/
 project/my_models/
 *.egg
+CLAUDE.md

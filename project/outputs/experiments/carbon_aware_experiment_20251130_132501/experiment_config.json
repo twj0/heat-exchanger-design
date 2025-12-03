@@ -1,0 +1,10 @@
+{
+  "experiment_name": "carbon_aware_experiment",
+  "timestamp": "20251130_132501",
+  "total_timesteps": 2000,
+  "n_eval_episodes": 3,
+  "seed": 42,
+  "quick_mode": true,
+  "transformer_model": "D:\\\u5b66\u4e60\\\u5316\u80fd\u4efb\u9009\\\u6362\u70ed\u5668\u8bbe\u8ba1\\workspace\\project\\outputs\\models\\carbon_aware_experiment_transformer_20251130_132501\\final_model",
+  "mlp_model": "D:\\\u5b66\u4e60\\\u5316\u80fd\u4efb\u9009\\\u6362\u70ed\u5668\u8bbe\u8ba1\\workspace\\project\\outputs\\models\\carbon_aware_experiment_mlp_20251130_132505\\final_model"
+}

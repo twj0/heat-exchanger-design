@@ -1,0 +1,69 @@
+building:
+  hp_capacity: 195800
+  hp_cop_cooling: 2.88
+  hp_cop_heating: 3.32
+  location: Shanghai
+  name: University_Classroom_China
+  num_zones: 4
+  pv_peak_power: 47000
+  tes_max_temp: 50.0
+  tes_min_temp: 40.0
+  tes_volume: 12.0
+  zone_area: 218.09
+  zone_height: 5.1
+carbon_wrapper:
+  carbon_file: data/schedules/carbon_intensity.csv
+  forecast_horizon: 4
+  lambda_carbon: 0.5
+  lambda_comfort: 10.0
+  price_file: data/schedules/electricity_price.csv
+environment:
+  env_id: Eplus-5zone-hot-continuous-v1
+  episode_length: 672
+  timestep: 900
+  weather_file: data/weather/CHN_Shanghai.epw
+evaluation:
+  baselines:
+  - rule_based
+  - mlp_sac
+  scenarios:
+  - duration_days: 30
+    name: summer_peak
+    start_day: 180
+  - duration_days: 30
+    name: winter_peak
+    start_day: 330
+  - duration_days: 30
+    name: transition_spring
+    start_day: 90
+experiment_name: ablation_temporal_20251201_140018
+extractor_type: temporal_transformer
+logging:
+  experiment_name: carbon_aware_sac_transformer
+  log_dir: outputs/logs
+  model_dir: outputs/models
+  results_dir: outputs/results
+  verbose: 1
+seed: 42
+total_timesteps: 100000
+training:
+  algorithm: SAC
+  batch_size: 256
+  buffer_size: 100000
+  ent_coef: auto
+  eval_freq: 10000
+  gamma: 0.99
+  learning_rate: 0.0003
+  learning_starts: 10000
+  n_eval_episodes: 5
+  save_freq: 50000
+  seed: 42
+  tau: 0.005
+  total_timesteps: 500000
+transformer:
+  d_model: 64
+  dropout: 0.1
+  enabled: true
+  features_dim: 128
+  n_heads: 4
+  n_layers: 2

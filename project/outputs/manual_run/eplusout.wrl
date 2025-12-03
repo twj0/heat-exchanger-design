@@ -1,0 +1,1063 @@
+#VRML V2.0 utf8
+WorldInfo {
+   title "Building - University_Classroom_Shanghai"
+   info ["EnergyPlus Program Version EnergyPlus, Version 23.2.0-7636e6b3e9, YMD=2025.11.30 21:48"]
+   info ["Surface Color Scheme Default"]
+}
+# Zone Names
+# Zone=1:RETURN_PLENUM
+# Zone=2:CLASSROOM_SOUTH
+# Zone=3:CLASSROOM_EAST
+# Zone=4:CLASSROOM_NORTH
+# Zone=5:CLASSROOM_WEST
+# Zone=6:CORRIDOR
+Shape {
+appearance DEF FLOOR Appearance {
+material Material { diffuseColor 0.502 0.502 0.502 }
+}
+}
+Shape {
+appearance DEF ROOF Appearance {
+material Material { diffuseColor 1 1 0 }
+}
+}
+Shape {
+appearance DEF WALL Appearance {
+material Material { diffuseColor 0 1 0 }
+}
+}
+Shape {
+appearance DEF WINDOW Appearance {
+material Material { diffuseColor 0 1 1 }
+}
+}
+Shape {
+appearance DEF DOOR Appearance {
+material Material { diffuseColor 0 1 1 }
+}
+}
+Shape {
+appearance DEF GLASSDOOR Appearance {
+material Material { diffuseColor 0 1 1 }
+}
+}
+Shape {
+appearance DEF FIXEDSHADE Appearance {
+material Material { diffuseColor 1 0 1 }
+}
+}
+Shape {
+appearance DEF BLDGSHADE Appearance {
+material Material { diffuseColor 0 0 1 }
+}
+}
+Shape {
+appearance DEF SUBSHADE Appearance {
+material Material { diffuseColor 1 0 1 }
+}
+}
+Shape {
+appearance DEF BACKCOLOR Appearance {
+material Material { diffuseColor 0.502 0.502 0.784 }
+}
+}
+# RETURN_PLENUM:WALL-1PF
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf5 Coordinate {
+point [
+        0.00000         0.00000         3.00000,
+        0.00000         0.00000         2.40000,
+       30.50000         0.00000         2.40000,
+       30.50000         0.00000         3.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:WALL-1PR
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf6 Coordinate {
+point [
+       30.50000         0.00000         3.00000,
+       30.50000         0.00000         2.40000,
+       30.50000        15.20000         2.40000,
+       30.50000        15.20000         3.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:WALL-1PB
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf7 Coordinate {
+point [
+       30.50000        15.20000         3.00000,
+       30.50000        15.20000         2.40000,
+        0.00000        15.20000         2.40000,
+        0.00000        15.20000         3.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:WALL-1PL
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf8 Coordinate {
+point [
+        0.00000        15.20000         3.00000,
+        0.00000        15.20000         2.40000,
+        0.00000         0.00000         2.40000,
+        0.00000         0.00000         3.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:C1-1P
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf9 Coordinate {
+point [
+       26.80000         3.70000         2.40000,
+       30.50000         0.00000         2.40000,
+        0.00000         0.00000         2.40000,
+        3.70000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:C2-1P
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf10 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+       30.50000        15.20000         2.40000,
+       30.50000         0.00000         2.40000,
+       26.80000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:C3-1P
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf11 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+        3.70000        11.60000         2.40000,
+        0.00000        15.20000         2.40000,
+       30.50000        15.20000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:C4-1P
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf12 Coordinate {
+point [
+        3.70000         3.70000         2.40000,
+        0.00000         0.00000         2.40000,
+        0.00000        15.20000         2.40000,
+        3.70000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:C5-1P
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf13 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+       26.80000         3.70000         2.40000,
+        3.70000         3.70000         2.40000,
+        3.70000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# RETURN_PLENUM:TOP-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf14 Coordinate {
+point [
+        0.00000        15.20000         3.00000,
+        0.00000         0.00000         3.00000,
+       30.50000         0.00000         3.00000,
+       30.50000        15.20000         3.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:FRONT-1
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf15 Coordinate {
+point [
+        0.00000         0.00000         2.40000,
+        0.00000         0.00000         0.00000,
+       30.50000         0.00000         0.00000,
+       30.50000         0.00000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:WF-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf16 Coordinate {
+point [
+        3.00000         0.00000         2.10000,
+        3.00000         0.00000         0.90000,
+       16.80000         0.00000         0.90000,
+       16.80000         0.00000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:DF-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf17 Coordinate {
+point [
+       21.30000         0.00000         2.10000,
+       21.30000         0.00000         0.00000,
+       23.80000         0.00000         0.00000,
+       23.80000         0.00000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:SB12
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf18 Coordinate {
+point [
+       30.50000         0.00000         2.40000,
+       30.50000         0.00000         0.00000,
+       26.80000         3.70000         0.00000,
+       26.80000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:SB14
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf19 Coordinate {
+point [
+        3.70000         3.70000         2.40000,
+        3.70000         3.70000         0.00000,
+        0.00000         0.00000         0.00000,
+        0.00000         0.00000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:SB15
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf20 Coordinate {
+point [
+       26.80000         3.70000         2.40000,
+       26.80000         3.70000         0.00000,
+        3.70000         3.70000         0.00000,
+        3.70000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:F1-1
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf21 Coordinate {
+point [
+       26.80000         3.70000         0.00000,
+       30.50000         0.00000         0.00000,
+        0.00000         0.00000         0.00000,
+        3.70000         3.70000         0.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:C1-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf22 Coordinate {
+point [
+        3.70000         3.70000         2.40000,
+        0.00000         0.00000         2.40000,
+       30.50000         0.00000         2.40000,
+       26.80000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:MAIN SOUTH OVERHANG
+Shape {
+appearance USE SUBSHADE
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf1 Coordinate {
+point [
+        0.00000        -1.30000         2.20000,
+        0.00000         0.00000         2.20000,
+       19.80000         0.00000         2.20000,
+       19.80000        -1.30000         2.20000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:Mir-MAIN SOUTH OVERHANG
+Shape {
+appearance USE SUBSHADE
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf2 Coordinate {
+point [
+       19.80000        -1.30000         2.20000,
+       19.80000         0.00000         2.20000,
+        0.00000         0.00000         2.20000,
+        0.00000        -1.30000         2.20000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:SOUTH DOOR OVERHANG
+Shape {
+appearance USE SUBSHADE
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf3 Coordinate {
+point [
+       21.00000        -2.00000         2.60000,
+       21.00000         0.00000         2.60000,
+       24.10000         0.00000         2.60000,
+       24.10000        -2.00000         2.60000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_SOUTH:Mir-SOUTH DOOR OVERHANG
+Shape {
+appearance USE SUBSHADE
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf4 Coordinate {
+point [
+       24.10000        -2.00000         2.60000,
+       24.10000         0.00000         2.60000,
+       21.00000         0.00000         2.60000,
+       21.00000        -2.00000         2.60000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:RIGHT-1
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf23 Coordinate {
+point [
+       30.50000         0.00000         2.40000,
+       30.50000         0.00000         0.00000,
+       30.50000        15.20000         0.00000,
+       30.50000        15.20000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:WR-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf24 Coordinate {
+point [
+       30.50000         3.80000         2.10000,
+       30.50000         3.80000         0.90000,
+       30.50000        11.40000         0.90000,
+       30.50000        11.40000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:SB21
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf25 Coordinate {
+point [
+       26.80000         3.70000         2.40000,
+       26.80000         3.70000         0.00000,
+       30.50000         0.00000         0.00000,
+       30.50000         0.00000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:SB23
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf26 Coordinate {
+point [
+       30.50000        15.20000         2.40000,
+       30.50000        15.20000         0.00000,
+       26.80000        11.60000         0.00000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:SB25
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf27 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+       26.80000        11.60000         0.00000,
+       26.80000         3.70000         0.00000,
+       26.80000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:F2-1
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf28 Coordinate {
+point [
+       26.80000        11.60000         0.00000,
+       30.50000        15.20000         0.00000,
+       30.50000         0.00000         0.00000,
+       26.80000         3.70000         0.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_EAST:C2-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf29 Coordinate {
+point [
+       26.80000         3.70000         2.40000,
+       30.50000         0.00000         2.40000,
+       30.50000        15.20000         2.40000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:BACK-1
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf30 Coordinate {
+point [
+       30.50000        15.20000         2.40000,
+       30.50000        15.20000         0.00000,
+        0.00000        15.20000         0.00000,
+        0.00000        15.20000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:WB-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf31 Coordinate {
+point [
+       27.40000        15.20000         2.10000,
+       27.40000        15.20000         0.90000,
+       13.70000        15.20000         0.90000,
+       13.70000        15.20000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:DB-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf32 Coordinate {
+point [
+        9.10000        15.20000         2.10000,
+        9.10000        15.20000         0.00000,
+        7.00000        15.20000         0.00000,
+        7.00000        15.20000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:SB32
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf33 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+       26.80000        11.60000         0.00000,
+       30.50000        15.20000         0.00000,
+       30.50000        15.20000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:SB34
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf34 Coordinate {
+point [
+        0.00000        15.20000         2.40000,
+        0.00000        15.20000         0.00000,
+        3.70000        11.60000         0.00000,
+        3.70000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:SB35
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf35 Coordinate {
+point [
+        3.70000        11.60000         2.40000,
+        3.70000        11.60000         0.00000,
+       26.80000        11.60000         0.00000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:F3-1
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf36 Coordinate {
+point [
+       26.80000        11.60000         0.00000,
+        3.70000        11.60000         0.00000,
+        0.00000        15.20000         0.00000,
+       30.50000        15.20000         0.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_NORTH:C3-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf37 Coordinate {
+point [
+       30.50000        15.20000         2.40000,
+        0.00000        15.20000         2.40000,
+        3.70000        11.60000         2.40000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:LEFT-1
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf38 Coordinate {
+point [
+        0.00000        15.20000         2.40000,
+        0.00000        15.20000         0.00000,
+        0.00000         0.00000         0.00000,
+        0.00000         0.00000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:WL-1
+Shape {
+appearance USE WINDOW
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf39 Coordinate {
+point [
+        0.00000        11.40000         2.10000,
+        0.00000        11.40000         0.90000,
+        0.00000         3.80000         0.90000,
+        0.00000         3.80000         2.10000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:SB41
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf40 Coordinate {
+point [
+        0.00000         0.00000         2.40000,
+        0.00000         0.00000         0.00000,
+        3.70000         3.70000         0.00000,
+        3.70000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:SB43
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf41 Coordinate {
+point [
+        3.70000        11.60000         2.40000,
+        3.70000        11.60000         0.00000,
+        0.00000        15.20000         0.00000,
+        0.00000        15.20000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:SB45
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf42 Coordinate {
+point [
+        3.70000         3.70000         2.40000,
+        3.70000         3.70000         0.00000,
+        3.70000        11.60000         0.00000,
+        3.70000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:F4-1
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf43 Coordinate {
+point [
+        3.70000         3.70000         0.00000,
+        0.00000         0.00000         0.00000,
+        0.00000        15.20000         0.00000,
+        3.70000        11.60000         0.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CLASSROOM_WEST:C4-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf44 Coordinate {
+point [
+        3.70000        11.60000         2.40000,
+        0.00000        15.20000         2.40000,
+        0.00000         0.00000         2.40000,
+        3.70000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:SB51
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf45 Coordinate {
+point [
+        3.70000         3.70000         2.40000,
+        3.70000         3.70000         0.00000,
+       26.80000         3.70000         0.00000,
+       26.80000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:SB52
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf46 Coordinate {
+point [
+       26.80000         3.70000         2.40000,
+       26.80000         3.70000         0.00000,
+       26.80000        11.60000         0.00000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:SB53
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf47 Coordinate {
+point [
+       26.80000        11.60000         2.40000,
+       26.80000        11.60000         0.00000,
+        3.70000        11.60000         0.00000,
+        3.70000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:SB54
+Shape {
+appearance USE WALL
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf48 Coordinate {
+point [
+        3.70000        11.60000         2.40000,
+        3.70000        11.60000         0.00000,
+        3.70000         3.70000         0.00000,
+        3.70000         3.70000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:F5-1
+Shape {
+appearance USE FLOOR
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf49 Coordinate {
+point [
+       26.80000        11.60000         0.00000,
+       26.80000         3.70000         0.00000,
+        3.70000         3.70000         0.00000,
+        3.70000        11.60000         0.00000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}
+# CORRIDOR:C5-1
+Shape {
+appearance USE ROOF
+geometry IndexedFaceSet {
+solid TRUE
+coord DEF Surf50 Coordinate {
+point [
+        3.70000        11.60000         2.40000,
+        3.70000         3.70000         2.40000,
+       26.80000         3.70000         2.40000,
+       26.80000        11.60000         2.40000,
+]
+}
+coordIndex [
+ 0 1 2 3 -1
+]
+ccw TRUE
+solid TRUE
+}
+}

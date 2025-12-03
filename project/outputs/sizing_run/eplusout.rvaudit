@@ -1,0 +1,16 @@
+ ReadVarsESO
+ processing:D:\学习\化能任选\换热器设计\workspace\project\outputs\sim_building.rvi
+ input file:outputs\sizing_run\eplusout.eso
+ output file:outputs\sizing_run\eplusout.csv
+ getting all vars from:outputs\sizing_run\eplusout.eso
+  number variables requested for output=         147
+ ReadVars Run Time=00hr 00min  4.02sec
+ ReadVarsESO program completed successfully.
+ ReadVarsESO
+ processing:D:\学习\化能任选\换热器设计\workspace\project\outputs\sim_building.mvi
+ input file:outputs\sizing_run\eplusout.mtr
+ output file:outputs\sizing_run\eplusmtr.csv
+ getting all vars from:outputs\sizing_run\eplusout.mtr
+  number variables requested for output=          16
+ ReadVars Run Time=00hr 00min  0.02sec
+ ReadVarsESO program completed successfully.

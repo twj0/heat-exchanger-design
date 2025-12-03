@@ -1,16 +1,10 @@
-"""Physical models for thermal energy storage and heat exchanger systems."""
+"""
+Neural network models for RL agents.
 
-from .thermal_storage import ThermalStorage, SensibleHeatStorage, PCMStorage
-from .heat_exchanger import HeatExchanger, EffectivenessNTU, LMTD
-from .economic_model import EconomicModel, TOUPricing
+Modules:
+    - transformer_policy: Transformer-based feature extractor (Innovation C)
+"""
 
-__all__ = [
-    "ThermalStorage",
-    "SensibleHeatStorage", 
-    "PCMStorage",
-    "HeatExchanger",
-    "EffectivenessNTU",
-    "LMTD",
-    "EconomicModel",
-    "TOUPricing",
-]
+from models.transformer_policy import TransformerExtractor
+
+__all__ = ["TransformerExtractor"]

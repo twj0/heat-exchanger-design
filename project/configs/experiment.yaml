@@ -1,0 +1,167 @@
+# Experiment Configuration for Carbon-Aware Building Control
+# Innovation: EnergyPlus + SAC + Carbon Dual-Objective + Transformer
+
+# =============================================================================
+# Environment Settings
+# =============================================================================
+environment:
+  # Sinergym environment ID (will be configured after IDF setup)
+  env_id: "Eplus-5zone-hot-continuous-v1"  # Placeholder, replace with custom
+  
+  # Simulation timestep
+  timestep: 900  # seconds (15 minutes)
+  
+  # Episode length
+  episode_length: 672  # timesteps (1 week at 15-min intervals)
+  
+  # Weather file
+  weather_file: "data/weather/CHN_Shanghai.epw"
+
+# =============================================================================
+# Carbon-Aware Wrapper Settings (Innovation B)
+# =============================================================================
+carbon_wrapper:
+  # Weight for carbon emission in reward
+  lambda_carbon: 0.5
+  
+  # Weight for comfort violation penalty
+  lambda_comfort: 10.0
+  
+  # Forecast horizon (hours ahead)
+  forecast_horizon: 4
+  
+  # Data files
+  carbon_file: "data/schedules/carbon_intensity.csv"
+  price_file: "data/schedules/electricity_price.csv"
+
+# =============================================================================
+# Building Model Settings
+# =============================================================================
+building:
+  name: "University_Classroom_China"
+  location: "Shanghai"
+  
+  # Geometry (based on reference paper)
+  num_zones: 4
+  zone_area: 218.09  # m² per classroom
+  zone_height: 5.1   # m
+  
+  # Thermal storage
+  tes_volume: 12.0   # m³
+  tes_max_temp: 50.0 # °C
+  tes_min_temp: 40.0 # °C (heating) / 9.0 °C (cooling)
+  
+  # Heat pump
+  hp_capacity: 195800  # W
+  hp_cop_heating: 3.32
+  hp_cop_cooling: 2.88
+  
+  # PV system
+  pv_peak_power: 47000  # W
+
+# =============================================================================
+# RL Training Settings
+# =============================================================================
+training:
+  # Algorithm
+  algorithm: "SAC"
+  
+  # Total training timesteps
+  total_timesteps: 500000
+  
+  # Learning rate
+  learning_rate: 0.0003
+  
+  # Batch size
+  batch_size: 256
+  
+  # Buffer size
+  buffer_size: 100000
+  
+  # Discount factor
+  gamma: 0.99
+  
+  # Soft update coefficient
+  tau: 0.005
+  
+  # Entropy coefficient (auto-tuned)
+  ent_coef: "auto"
+  
+  # Learning starts
+  learning_starts: 10000
+  
+  # Evaluation frequency
+  eval_freq: 10000
+  
+  # Number of evaluation episodes
+  n_eval_episodes: 5
+  
+  # Model save frequency
+  save_freq: 50000
+  
+  # Random seed
+  seed: 42
+
+# =============================================================================
+# Transformer Feature Extractor Settings (Innovation C)
+# =============================================================================
+transformer:
+  # Enable transformer extractor
+  enabled: true
+  
+  # Output feature dimension
+  features_dim: 128
+  
+  # Model dimension
+  d_model: 64
+  
+  # Number of attention heads
+  n_heads: 4
+  
+  # Number of transformer layers
+  n_layers: 2
+  
+  # Dropout rate
+  dropout: 0.1
+
+# =============================================================================
+# Logging and Output
+# =============================================================================
+logging:
+  # TensorBoard log directory
+  log_dir: "outputs/logs"
+  
+  # Model save directory
+  model_dir: "outputs/models"
+  
+  # Results directory
+  results_dir: "outputs/results"
+  
+  # Experiment name
+  experiment_name: "carbon_aware_sac_transformer"
+  
+  # Verbose level
+  verbose: 1
+
+# =============================================================================
+# Evaluation Settings
+# =============================================================================
+evaluation:
+  # Evaluation scenarios
+  scenarios:
+    - name: "summer_peak"
+      start_day: 180  # July
+      duration_days: 30
+      
+    - name: "winter_peak"
+      start_day: 330  # December
+      duration_days: 30
+      
+    - name: "transition_spring"
+      start_day: 90   # April
+      duration_days: 30
+  
+  # Baseline comparison
+  baselines:
+    - "rule_based"
+    - "mlp_sac"
